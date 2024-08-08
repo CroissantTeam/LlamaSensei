@@ -68,32 +68,3 @@ if __name__ == "__main__":
             print()
     else:
         print("No relevant videos found or an error occurred.")
-
-# import yt_dlp
-
-# def get_related_videos(video_url):
-#     ydl_opts = {
-#         'quiet': True,
-#         'extract_flat': 'in_playlist',
-#         'skip_download': True,
-#     }
-
-#     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-#         info_dict = ydl.extract_info(video_url, download=False)
-#         related_videos = info_dict.get('related_videos', [])
-
-#     video_urls = []
-#     for video in related_videos:
-#         video_id = video.get('id')
-#         if video_id:
-#             video_urls.append(f"https://www.youtube.com/watch?v={video_id}")
-    
-#     return video_urls
-
-# # Example usage
-# if __name__ == "__main__":
-#     video_url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"  # Replace with your video URL
-#     related_videos = get_related_videos(video_url)
-#     print("Related video URLs:")
-#     for url in related_videos:
-#         print(url)
