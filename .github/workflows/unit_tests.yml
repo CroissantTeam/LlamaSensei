@@ -1,0 +1,44 @@
+name: Unit tests
+
+on:
+    push:
+    pull_request:
+        branches: [main, dev]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements-dev.txt
+        pip install pytest
+
+    - name: Install THIS package
+      run: |
+        pip install -U .
+
+    - name: Check for tests
+      id: check_tests
+      run: |
+        if [ -d "tests" ]; then echo "tests_exist=true" >> $GITHUB_ENV; else echo "tests_exist=false" >> $GITHUB_ENV; fi
+
+    - name: Run tests
+      if: env.tests_exist == 'true'
+      run: |
+        pytest
+
+    - name: No tests found
+      if: env.tests_exist == 'false'
+      run: |
+        echo "No tests to run, but CI passed!"
