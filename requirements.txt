@@ -2,3 +2,6 @@ requests
 beautifulsoup4
 yt-dlp
 pymilvus
+xformers
+sentence_transformers
+nltk
