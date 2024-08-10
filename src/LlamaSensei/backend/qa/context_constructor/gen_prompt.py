@@ -21,7 +21,7 @@ def retrieve(query: str, top_k: int = 3):
         },
     ]
 
-def answer(query: str, course: str) -> str:
+def gen_prompt(query: str, course: str) -> str:
     result  = retrieve(query)
     context_list = [val["text"] for val in result]
     context = "\n\n".join(context_list)
@@ -37,10 +37,19 @@ def answer(query: str, course: str) -> str:
 
     return prompt_template
 
-if __name__ == '__main__':
+def answer(query: str, course: str):
     from langchain_groq import ChatGroq
     model = ChatGroq(model="llama3-70b-8192", temperature=0)
     
-    res = model.invoke(answer(query="What method do we use if we want to predict house price in an area ?", 
-                              course="cs229_stanford"))
-    print(res)
+    res = model.invoke(gen_prompt(query, course))
+    res = str(res)
+    # get the content
+    start = res.find('"') + 1
+    end = res.find('"', start)
+    llm_answer = res[start:end].replace(r'\n', '\n')
+    return llm_answer
+
+if __name__ == '__main__':
+    result = answer(query="What method do we use if we want to predict house price in an area ?", 
+           course="cs229_stanford")
+    print(result)

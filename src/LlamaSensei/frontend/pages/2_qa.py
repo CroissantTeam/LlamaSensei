@@ -1,7 +1,7 @@
 import streamlit as st
 import random
 import time
-from src.backend.qa.context_constructor.gen_prompt import answer
+from LlamaSensei.backend.qa.context_constructor.gen_prompt import answer
 
 def get_courses():
     return ["cs224n_stanford", "cs229_stanford", "cs231n_stanford"]
