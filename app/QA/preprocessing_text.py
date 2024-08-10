@@ -2,7 +2,6 @@ import nltk
 from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.stem import WordNetLemmatizer, PorterStemmer
 # from nltk.chunk import ne_chunk #https://www.nltk.org/api/nltk.chunk.html
-
 from nltk.corpus import stopwords
 from nltk.tag import pos_tag
 
@@ -59,12 +58,12 @@ def group_chunks(chunks_list):
         end=chunk[2]
     return (transcript,start,end)
 
+if __name__=="__main__":
+    # Example usage
+    with open("text.txt","r") as file:
+        transcript = file.readlines()
+        transcript= " ".join(transcript)
 
-# Example usage
-with open("text.txt","r") as file:
-    transcript = file.readlines()
-    transcript= " ".join(transcript)
-    
-print(len(chunk(preprocess_transcript(transcript))))
-print(len(chunk(transcript)))
+    print(len(chunk(preprocess_transcript(transcript))))
+    print(len(chunk(transcript)))
 
