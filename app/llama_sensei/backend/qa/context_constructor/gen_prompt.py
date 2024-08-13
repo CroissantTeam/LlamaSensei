@@ -42,12 +42,7 @@ def answer(query: str, course: str):
     model = ChatGroq(model="llama3-70b-8192", temperature=0)
     
     res = model.invoke(gen_prompt(query, course))
-    res = str(res)
-    # get the content
-    start = res.find('"') + 1
-    end = res.find('"', start)
-    llm_answer = res[start:end].replace(r'\n', '\n')
-    return llm_answer
+    return res.content
 
 if __name__ == '__main__':
     result = answer(query="What method do we use if we want to predict house price in an area ?", 
