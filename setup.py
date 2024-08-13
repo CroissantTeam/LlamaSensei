@@ -1,14 +1,14 @@
 from setuptools import find_packages, setup
 
-with open("requirements.txt") as f:
+with open("requirements-dev.txt") as f:
     required = f.read().splitlines()
 
 setup(
-    name="LlamaSensei",
+    name="llama_sensei",
     version="0.0.1",
-    description="Testing",
+    description="A LLM-powered personal online courses teaching assistant",
     author="Croissant Team",
-    packages=find_packages("src"),
-    package_dir={"": "src"},
+    packages=find_packages("app"),
+    package_dir={"": "app"},
     install_requires=required,
 )
