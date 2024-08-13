@@ -1,29 +1,48 @@
-import streamlit as st
 import time
+
+import streamlit as st
 from llama_sensei.backend.qa.llm_api.generate_answer import GenerateRAGAnswer
+
 
 def get_courses():
     return ["cs224n_stanford", "cs229_stanford", "cs231n_stanford"]
 
-st.title("Echo Bot")
-course_name = st.selectbox(label="Choose the course you want to ask", 
-             options=get_courses())
+st.set_page_config(layout="wide")
+
+st.title("Llama Sensei")
+course_name = st.selectbox(
+    label="Choose the course you want to ask", options=get_courses()
+)
 
 # Initialize chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# display more info about response
+def more_info(evidence: dict):
+    for ctx in evidence["context_list"]:
+        st.markdown(f"Context (start from [here]({ctx['metadata']['link']}&t={ctx['metadata']['start']}s)): {ctx['context']}\n")
+    
+    st.markdown(f"**Faithfulness Score:** {evidence['f_score']:.4f}\n")
+    st.markdown(f"**Answer Relevancy Score:** {evidence['ar_score']:.4f}")
+
 # Display chat messages from history osn app rerun
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
+        if "evidence" in message:
+            with st.expander("More information"):
+                more_info(message["evidence"])
 
 # Streamed response emulator
 def response_generator(input: str):
     rag_generator = GenerateRAGAnswer(query=prompt, course=course_name)
-    response = rag_generator.generate_answer()
-    for word in response.split(" "):
-        yield word + " "
+    answer, evidence = rag_generator.generate_answer()
+    return answer, evidence
+
+def streaming(input: str):
+    for w in input.split(" "):
+        yield w + " "
         time.sleep(0.05)
 
 # React to user input
@@ -38,6 +57,9 @@ if prompt := st.chat_input("What is up?"):
         st.session_state.messages.append({"role": "user", "content": prompt})
 
         with st.chat_message("assistant"):
-            response = st.write_stream(response_generator(prompt))
+            answer, evidence = response_generator(prompt)
+            st.write_stream(streaming(answer))
+            with st.expander("More information"):
+                more_info(evidence)
             # Add assistant response to chat history
-            st.session_state.messages.append({"role": "assistant", "content": response})
+            st.session_state.messages.append({"role": "assistant", "content": answer, "evidence": evidence})
