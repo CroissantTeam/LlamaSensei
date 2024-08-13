@@ -3,7 +3,7 @@ from datasets import Dataset
 from ragas.metrics import faithfulness
 from ragas import evaluate
 
-MODEL = ChatGroq(model="llama3-70b-8192", temperature=0)
+MODEL = "llama3-70b-8192"
 
 def retrieve(query: str, top_k: int = 3):
     return [
@@ -31,7 +31,7 @@ class GenerateRAGAnswer:
     def __init__(self, query: str, course: str, model = MODEL):
         self.query = query
         self.course = course
-        self.model = model
+        self.model = ChatGroq(model=model, temperature=0)
         self.contexts = None  # To store the retrieved contexts
     
     def retrieve_contexts(self):
@@ -41,7 +41,7 @@ class GenerateRAGAnswer:
     
     def gen_prompt(self) -> str:
         # Extract the 'text' field from each context dictionary
-        context_texts = [f"{ctx['text']} (Timestamp: {ctx['timestamp']})" for ctx in self.contexts]
+        context_texts = [f"{ctx['text']}" for ctx in self.contexts]
 
         # Join the extracted text with double newlines
         context = "\n\n".join(context_texts)

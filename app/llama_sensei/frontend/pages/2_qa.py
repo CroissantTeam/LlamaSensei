@@ -1,13 +1,12 @@
 import streamlit as st
-import random
 import time
-from LlamaSensei.backend.qa.context_constructor.gen_prompt import answer
+from llama_sensei.backend.qa.llm_api.generate_answer import GenerateRAGAnswer
 
 def get_courses():
     return ["cs224n_stanford", "cs229_stanford", "cs231n_stanford"]
 
 st.title("Echo Bot")
-choice = st.selectbox(label="Choose the course you want to ask", 
+course_name = st.selectbox(label="Choose the course you want to ask", 
              options=get_courses())
 
 # Initialize chat history
@@ -21,8 +20,9 @@ for message in st.session_state.messages:
 
 # Streamed response emulator
 def response_generator(input: str):
-    response = answer(input, choice)
-    for word in response.split():
+    rag_generator = GenerateRAGAnswer(query=prompt, course=course_name)
+    response = rag_generator.generate_answer()
+    for word in response.split(" "):
         yield word + " "
         time.sleep(0.05)
 
