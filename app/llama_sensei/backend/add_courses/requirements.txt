@@ -1,4 +1,3 @@
-silero-vad
 deepgram-sdk
 python-dotenv
 soundfile
