@@ -1,5 +1,7 @@
-import yt_dlp
+from typing import List
 import sys
+
+import yt_dlp
 
 class PlaylistVideosFetcher:
     def __init__(self):
@@ -9,7 +11,7 @@ class PlaylistVideosFetcher:
             'quiet': False,  # Set to False for more verbose output
         }
 
-    def get_playlist_videos(self, playlist_url):
+    def get_playlist_videos(self, playlist_url: str) -> List[str]:
         try:
             with yt_dlp.YoutubeDL(self.ydl_opts) as ydl:
                 print(f"Extracting info from: {playlist_url}")
@@ -23,42 +25,18 @@ class PlaylistVideosFetcher:
                     print("No 'entries' found in playlist info.")
                     return []
                 
-                videos = self._process_entries(playlist_info['entries'])
-                print(f"Total videos found: {len(videos)}")
-                return videos
+                video_urls = [video["url"] for video in playlist_info['entries'] if video.get('url')]
+                print(f"Total videos found: {len(video_urls)}")
+                return video_urls
         
         except Exception as e:
-            print(f"An error occurred: {str(e)}", file=sys.stderr)
-            return []
-
-    def _process_entries(self, entries):
-        videos = []
-        for entry in entries:
-            if entry:
-                video = {
-                    'title': entry.get('title', 'No title'),
-                    'url': entry.get('url', 'No URL'),
-                    'duration': entry.get('duration', 'Unknown'),
-                    'uploader': entry.get('uploader', 'Unknown uploader')
-                }
-                videos.append(video)
-                print(f"Added video: {video['title']}")
-        return videos
-
-    def print_videos(self, videos):
-        if videos:
-            for video in videos:
-                print(f"Title: {video['title']}")
-                print(f"URL: {video['url']}")
-                print(f"Duration: {video['duration']} seconds")
-                print(f"Uploader: {video['uploader']}")
-                print("---")
-        else:
-            print("No videos were retrieved from the playlist.")
+            # print(f"An error occurred: {str(e)}", file=sys.stderr)
+            raise f"An error occurred: {str(e)}"
 
 if __name__=="__main__":
     # Example usage:
     playlist_url = "https://www.youtube.com/watch?v=Mad_J8s97OM&list=PL6uC-XGZC7X58oTIxIgC07QTXCJl0CBSX"
     fetcher = PlaylistVideosFetcher()
     playlist_videos = fetcher.get_playlist_videos(playlist_url)
-    fetcher.print_videos(playlist_videos)
+    # fetcher.print_videos(playlist_videos)
+    print(playlist_videos)
