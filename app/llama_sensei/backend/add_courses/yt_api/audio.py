@@ -1,9 +1,8 @@
-from typing import List
-import os
 import json
+import os
+from typing import List
 
 import yt_dlp
-
 
 METADATA_FILENAME = "playlist_metadata.json"
 
@@ -16,13 +15,15 @@ class YouTubeAudioDownloader:
         self.ydl_opts = {
             'format': 'bestaudio/best',
             'outtmpl': os.path.join(self.output_course_path, "audio", '%(id)s.%(ext)s'),
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio',
-                'preferredcodec': 'wav',
-                'preferredquality': '10',
-            }],
+            'postprocessors': [
+                {
+                    'key': 'FFmpegExtractAudio',
+                    'preferredcodec': 'wav',
+                    'preferredquality': '10',
+                }
+            ],
             'no_warnings': True,
-            'quiet': True
+            'quiet': True,
         }
 
     def download_audio(self, urls: List[str]):
@@ -32,7 +33,7 @@ class YouTubeAudioDownloader:
                 for url in urls:
                     info = ydl.extract_info(url, download=False)
                     video_info = {
-                        'id':info.get('id', 'No id'),
+                        'id': info.get('id', 'No id'),
                         'title': info.get('title', 'No title'),
                         'channel': info.get('channel', 'No channel'),
                         'url': info.get('url', 'No URL'),
@@ -41,17 +42,16 @@ class YouTubeAudioDownloader:
                         'duration': info.get('duration', 'Unknown'),
                     }
                     video_info_list.append(video_info)
-                
+
                 save_metadata_file = os.path.join(
-                    self.output_course_path, 
-                    METADATA_FILENAME
+                    self.output_course_path, METADATA_FILENAME
                 )
                 with open(save_metadata_file, "w") as f:
                     json.dump(video_info_list, f, indent=4)
-                
+
                 # Download playlist videos
                 ydl.download(urls)
-            
+
             return urls
 
         except Exception as e:
