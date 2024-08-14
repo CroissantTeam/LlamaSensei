@@ -1,0 +1,4 @@
+requests 
+yt-dlp
+sentence_transformers
+nltk
