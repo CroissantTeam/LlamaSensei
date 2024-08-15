@@ -3,31 +3,9 @@ from langchain_groq import ChatGroq
 from ragas import evaluate
 from ragas.metrics import faithfulness
 
+from llama_sensei.backend.add_courses.vectordb.document_processor import DocumentProcessor
+
 MODEL = "llama3-70b-8192"
-
-
-def retrieve(query: str, top_k: int = 3):
-    return [
-        {
-            "timestamp": "123456789",
-            "text": "When the target variable that we are trying to predict is continuous, such as in our housing example, we call the learning problem a regression problem",
-            "similarity_score": 0.32492834,
-            "metadata": {"start": 2180, "end": 2300, "link": "https://www.youtube.com/watch?v=jGwO_UgTS7I"},
-        },
-        {
-            "timestamp": "131332132",
-            "text": "When y can take on only a small number of discrete values (such as if, given the living area, we wanted to predict if a dwelling is a house or an apartment, say), we call it a classification problem.",
-            "similarity_score": 0.22333834,
-            "metadata": {"start": 1234, "end": 2345, "link": "https://www.youtube.com/watch?v=jGwO_UgTS7I"},
-        },
-        {
-            "timestamp": "324356733",
-            "text": "We will also use X denote the space of input values, and Y the space of output values.",
-            "similarity_score": 0.18333834,
-            "metadata": {"start": 90, "end": 245, "link": "https://www.youtube.com/watch?v=jGwO_UgTS7I"},
-        },
-    ]
-
 
 class GenerateRAGAnswer:
     def __init__(self, query: str, course: str, model=MODEL):
@@ -37,9 +15,11 @@ class GenerateRAGAnswer:
         self.contexts = None  # To store the retrieved contexts
 
     def retrieve_contexts(self):
-        result = retrieve(self.query)
+        processor = DocumentProcessor(self.course, search_only=True)
+        result = processor.search(self.query)
+        # print(result)
         self.contexts = [
-            {"text": val["text"], "metadata": val["metadata"]} for val in result
+            {"text": text, "metadata": metadata} for text, metadata in zip(result['documents'][0], result['metadatas'][0])
         ]  # Store contexts for use in prompt generation and evaluation
         return self.contexts
 
