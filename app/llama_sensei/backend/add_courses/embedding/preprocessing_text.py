@@ -91,16 +91,6 @@ if __name__ == "__main__":
     chunks = chunk(preprocessed)
     embedded = [embedding(chunk) for chunk in chunks]
     print(embedded)
-    with open("lemantized_embedded.txt", "w") as file:
-        from time import perf_counter
-
-        tin = perf_counter()
-        for chunk, embed in zip(chunks, embedded):
-            file.write(chunk)
-            file.write("\n")
-            file.write(str(embed.tolist()))
-            file.write("\n")
-        file.write(f"cost {perf_counter()-tin}s")
     # with open("non_lemantize.txt","w") as file:
     #     file.write(preprocess_transcript(transcript,False,False))
     # with open("lemantize.txt","w") as file:
