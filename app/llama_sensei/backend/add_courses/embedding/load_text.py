@@ -1,6 +1,5 @@
 import json
 
-
 class TranscriptLoader:
     def __init__(self, file_path="stanford_cs229_l1.json"):
         self.file_path = file_path
@@ -29,14 +28,11 @@ class TranscriptLoader:
         if not self.data:
             return None
 
-        self.data["metadata"]
-        paragraphs = self.data["results"]["channels"][0]["alternatives"][0][
-            "paragraphs"
-        ]["paragraphs"]
+        metadata = self.data["metadata"]
+        paragraphs = self.data["results"]["channels"][0]["alternatives"][0]["paragraphs"]["paragraphs"]
         doc = []
         for paragraph in paragraphs:
-            sentences = paragraph["sentences"]
-            text = " ".join([sentence["text"] for sentence in sentences])
+            text = " ".join([sentence["text"] for sentence in paragraph["sentences"]])
             start = paragraph["start"]
             end = paragraph["end"]
             doc.append((text, start, end))
@@ -46,7 +42,6 @@ class TranscriptLoader:
         if self.data:
             return self.data.get("metadata")
         return None
-
 
 # Example usage:
 if __name__ == "__main__":
