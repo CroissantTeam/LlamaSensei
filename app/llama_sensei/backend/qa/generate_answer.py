@@ -31,9 +31,10 @@ class GenerateRAGAnswer:
         context = "\n\n".join(context_texts)
 
         prompt_template = f"""
-            You are a teaching assistant. Given a set of relevant information (delimited by <info></info>) extracted from a document,
-            please compose an answer to the question of a student. Ensure that the answer is accurate, has a friendly tone, and sounds
-            helpful. If you cannot answer, ask the student to clarify the question.
+            You are a teaching assistant.
+            Given a set of relevant information from teacher's recording during the lesson (delimited by <info></info>), please compose an answer to the question of a student.
+            Ensure that the answer is accurate, has a friendly tone, and sounds helpful.
+            If you cannot answer, ask the student to clarify the question.
             If no context is available in the system, please answer that you can not find the relevant context in the system.
             <info>
             {context}

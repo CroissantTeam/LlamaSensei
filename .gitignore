@@ -162,3 +162,5 @@ cython_debug/
 #.idea/
 
 data
+
+stanford_cs229_l1.json
