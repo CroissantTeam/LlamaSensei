@@ -1,24 +1,33 @@
-from .vector_db_operations import VectorDBOperations
 from llama_sensei.backend.add_courses.embedding.get_embedding import Embedder
-from llama_sensei.backend.add_courses.embedding.preprocessing_text import TextPreprocessor
 from llama_sensei.backend.add_courses.embedding.load_text import TranscriptLoader
+from llama_sensei.backend.add_courses.embedding.preprocessing_text import (
+    TextPreprocessor,
+)
+
+from .vector_db_operations import VectorDBOperations
+
 
 class DocumentProcessor:
     def __init__(self, collection_name, search_only: bool):
         self.text_processor = TextPreprocessor()
         self.vector_db = VectorDBOperations()
         self.embedder = Embedder()
-        if (search_only == False):
+        if search_only is False:
             self.vector_db.create_collection(collection_name)
         self.collection_name = collection_name
 
     def process_document(self, path, metadata, num_st_each_chunk=3):
         # load data
         transcriptLoader = TranscriptLoader(path)
-        
+
         # Preprocess
         sentences = transcriptLoader.load_data()
-        chunks = [self.text_processor.merge_text(sentences[i:min(i + num_st_each_chunk, len(sentences))]) for i in range(0, len(sentences),num_st_each_chunk)]
+        chunks = [
+            self.text_processor.merge_text(
+                sentences[i : min(i + num_st_each_chunk, len(sentences))]
+            )
+            for i in range(0, len(sentences), num_st_each_chunk)
+        ]
         preprocessed_chunks = self.text_processor.preprocess_text(chunks)
 
         # embed

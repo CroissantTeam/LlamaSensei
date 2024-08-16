@@ -1,5 +1,7 @@
 from typing import List
+
 from sentence_transformers import SentenceTransformer
+
 
 class Embedder:
     def __init__(self, model_name="all-MiniLM-L12-v2"):
@@ -7,10 +9,15 @@ class Embedder:
 
     def embed(self, doc):
         return self.model.encode(doc)
-    
-    def embed_chunks(self,chunks:List[tuple],top_chunks:int = None)->List[tuple]:
-        if top_chunks==None:top_chunks=len(chunks)
-        return [(chunk[0],self.embed(chunk[0]),chunk[1],chunk[2]) for chunk in chunks[:top_chunks]]
+
+    def embed_chunks(self, chunks: List[tuple], top_chunks: int = None) -> List[tuple]:
+        if top_chunks is None:
+            top_chunks = len(chunks)
+        return [
+            (chunk[0], self.embed(chunk[0]), chunk[1], chunk[2])
+            for chunk in chunks[:top_chunks]
+        ]
+
 
 # Usage example:
 if __name__ == "__main__":

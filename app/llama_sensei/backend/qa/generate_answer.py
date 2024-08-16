@@ -1,11 +1,13 @@
 from datasets import Dataset
 from langchain_groq import ChatGroq
+from llama_sensei.backend.add_courses.vectordb.document_processor import (
+    DocumentProcessor,
+)
 from ragas import evaluate
 from ragas.metrics import faithfulness
 
-from llama_sensei.backend.add_courses.vectordb.document_processor import DocumentProcessor
-
 MODEL = "llama3-70b-8192"
+
 
 class GenerateRAGAnswer:
     def __init__(self, query: str, course: str, model=MODEL):
@@ -19,7 +21,8 @@ class GenerateRAGAnswer:
         result = processor.search(self.query)
         # print(result)
         self.contexts = [
-            {"text": text, "metadata": metadata} for text, metadata in zip(result['documents'][0], result['metadatas'][0])
+            {"text": text, "metadata": metadata}
+            for text, metadata in zip(result['documents'][0], result['metadatas'][0])
         ]  # Store contexts for use in prompt generation and evaluation
         return self.contexts
 
@@ -55,15 +58,22 @@ class GenerateRAGAnswer:
         faithfulness_score = self.calculate_faithfulness(llm_answer)
         answer_relevancy_score = self.calculate_answer_relevancy(llm_answer)
 
-        context_list = [{"context": ctx["text"], "metadata": ctx["metadata"]} for ctx in self.contexts]
+        context_list = [
+            {"context": ctx["text"], "metadata": ctx["metadata"]}
+            for ctx in self.contexts
+        ]
 
-        #evidence = (
+        # evidence = (
         #    f"**Retrieved Contexts:**\n{context_str}\n\n"
         #    f"**Faithfulness Score:** {faithfulness_score:.4f}\n"
         #    f"**Answer Relevancy Score:** {answer_relevancy_score:.4f}"
-        #)
+        # )
 
-        evidence = {"context_list": context_list, "f_score": faithfulness_score, "ar_score": answer_relevancy_score}
+        evidence = {
+            "context_list": context_list,
+            "f_score": faithfulness_score,
+            "ar_score": answer_relevancy_score,
+        }
 
         return llm_answer, evidence
 
@@ -112,6 +122,7 @@ class GenerateRAGAnswer:
         # Convert score to pandas DataFrame and get the first score
         score_df = score.to_pandas()
         return score_df['faithfulness'].iloc[0]
+
 
 # Example usage
 if __name__ == "__main__":
