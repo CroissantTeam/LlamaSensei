@@ -7,3 +7,5 @@ torchvision==0.18.1
 transformers==4.42.4
 pytest==8.3.2
 pytest-mock==3.14.0
+requests
+yt-dlp
