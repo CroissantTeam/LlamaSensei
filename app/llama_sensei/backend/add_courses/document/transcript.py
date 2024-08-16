@@ -33,9 +33,21 @@ class DeepgramSTTClient:
         for filename in audio_files:
             save_name = os.path.basename(filename).split(".")[0] + ".json"
             save_transcript_path = os.path.join(self.output_path, save_name)
-            if os.path.isfile(filename) and not os.path.exists(save_transcript_path):
+            if os.path.exists(save_transcript_path):
+                print(f"file {save_name} existed")
+            else:
                 await self.transcribe(filename, save_transcript_path)
-        return filename
+
+        # task_list = []
+        # for filename in audio_files:
+        #     save_name = os.path.basename(filename).split(".")[0] + ".json"
+        #     save_transcript_path = os.path.join(self.output_path, save_name)
+        #     if os.path.exists(save_transcript_path):
+        #         print(f"file {save_name} existed")
+        #     else:
+        #         task_list.append(asyncio.create_task(self.transcribe(filename, save_transcript_path)))
+
+        # await asyncio.gather(*task_list)
 
     async def transcribe(self, audio_file: str, save_file: str):
         try:
@@ -60,7 +72,7 @@ class DeepgramSTTClient:
             after = datetime.now()
             print("Received transcript results from Deepgram...")
             difference = after - before
-            print(f"Transcript time: {difference.seconds}")
+            print(f"Transcript time: {difference.seconds} seconds")
 
             with open(save_file, "w") as f:
                 f.write(r.to_json(indent=4))
