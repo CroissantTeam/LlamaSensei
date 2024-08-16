@@ -1,4 +1,5 @@
 import os
+from typing import List
 
 import httpx
 from deepgram import DeepgramClient, FileSource, PrerecordedOptions
@@ -23,16 +24,18 @@ class DeepgramSTTClient:
             smart_format=True,
         )
 
-    async def get_transcripts(self, audio_files):
+    async def get_transcripts(self, audio_files: List[str]):
         if len(audio_files) == 0:
             print("There is no file to transcribe")
             return
         for filename in audio_files:
-            if os.path.isfile(filename):
-                await self.transcribe(filename)
+            save_name = os.path.basename(filename).split(".")[0] + ".json"
+            save_transcript_path = os.path.join(self.output_path, save_name)
+            if os.path.isfile(filename) and not os.path.exists(save_transcript_path):
+                await self.transcribe(filename, save_transcript_path)
         return filename
 
-    async def transcribe(self, audio_file):
+    async def transcribe(self, audio_file: str, save_file: str):
         try:
             print("Connecting to Deepgram...")
             deepgram_client = DeepgramClient(DEEPGRAM_API_KEY)
@@ -53,9 +56,7 @@ class DeepgramSTTClient:
             )
             print("Received transcript results from Deepgram...")
 
-            save_name = os.path.basename(audio_file).split(".")[0] + ".json"
-            save_transcript_path = os.path.join(self.output_path, save_name)
-            with open(save_transcript_path, "w") as f:
+            with open(save_file, "w") as f:
                 f.write(r.to_json(indent=4))
 
         except Exception as e:
