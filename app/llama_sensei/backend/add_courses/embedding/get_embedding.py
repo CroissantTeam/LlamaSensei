@@ -2,7 +2,7 @@ from typing import List
 from sentence_transformers import SentenceTransformer
 
 class Embedder:
-    def __init__(self, model_name="dunzhang/stella_en_400M_v5"):
+    def __init__(self, model_name="all-MiniLM-L12-v2"):
         self.model = SentenceTransformer(model_name, trust_remote_code=True).cuda()
 
     def embed(self, doc):

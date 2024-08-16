@@ -12,12 +12,13 @@ class DocumentProcessor:
             self.vector_db.create_collection(collection_name)
         self.collection_name = collection_name
 
-    def process_document(self, path, metadata):
+    def process_document(self, path, metadata, num_st_each_chunk=3):
         # load data
         transcriptLoader = TranscriptLoader(path)
         
         # Preprocess
-        chunks = transcriptLoader.load_data()
+        sentences = transcriptLoader.load_data()
+        chunks = [self.text_processor.merge_text(sentences[i:min(i + num_st_each_chunk, len(sentences))]) for i in range(0, len(sentences),num_st_each_chunk)]
         preprocessed_chunks = self.text_processor.preprocess_text(chunks)
 
         # embed
