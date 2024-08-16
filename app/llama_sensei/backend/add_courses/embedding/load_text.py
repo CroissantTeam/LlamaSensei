@@ -5,7 +5,7 @@ class TranscriptLoader:
         self.file_path = file_path
         self.data = None
 
-    def load_data(self, simple_output=True):
+    def load_data(self, simple_output=False):
         try:
             with open(self.file_path, "r", encoding="utf-8") as file:
                 self.data = json.load(file)
@@ -19,7 +19,7 @@ class TranscriptLoader:
             print(f"An error occurred: {str(e)}")
             return None
 
-        if not simple_output:
+        if simple_output:
             return self.data
 
         return self._process_data()
