@@ -1,6 +1,8 @@
 import os
+from datetime import datetime
 from typing import List
 
+import aiofiles
 import httpx
 from deepgram import DeepgramClient, FileSource, PrerecordedOptions
 from dotenv import load_dotenv
@@ -41,20 +43,24 @@ class DeepgramSTTClient:
             deepgram_client = DeepgramClient(DEEPGRAM_API_KEY)
             print("Connect successful!")
 
-            with open(audio_file, "rb") as file:
-                buffer_data = file.read()
+            async with aiofiles.open(audio_file, "rb") as file:
+                buffer_data = await file.read()
 
             payload: FileSource = {
                 "buffer": buffer_data,
             }
 
             print("Sending request to Deepgram...")
+            before = datetime.now()
             r = await deepgram_client.listen.asyncrest.v("1").transcribe_file(
                 payload,
                 self.options,
                 timeout=httpx.Timeout(DEEPGRAM_TIMEOUT, connect=10.0),
             )
+            after = datetime.now()
             print("Received transcript results from Deepgram...")
+            difference = after - before
+            print(f"Transcript time: {difference.seconds}")
 
             with open(save_file, "w") as f:
                 f.write(r.to_json(indent=4))
