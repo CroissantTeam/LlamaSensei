@@ -17,13 +17,22 @@ class DeepgramSTTClient:
         self.output_path = output_path
         os.makedirs(self.output_path, exist_ok=True)
 
-    def get_transcripts(self, audio_files):
+        self.options = PrerecordedOptions(
+            model=DEFAULT_STT_MODEL,
+            sample_rate=AUDIO_SAMPLE_RATE,
+            smart_format=True,
+        )
+
+    async def get_transcripts(self, audio_files):
+        if len(audio_files) == 0:
+            print("There is no file to transcribe")
+            return
         for filename in audio_files:
             if os.path.isfile(filename):
-                self.transcribe(filename)
+                await self.transcribe(filename)
         return filename
 
-    def transcribe(self, audio_file):
+    async def transcribe(self, audio_file):
         try:
             print("Connecting to Deepgram...")
             deepgram_client = DeepgramClient(DEEPGRAM_API_KEY)
@@ -36,15 +45,11 @@ class DeepgramSTTClient:
                 "buffer": buffer_data,
             }
 
-            options = PrerecordedOptions(
-                model=DEFAULT_STT_MODEL,
-                sample_rate=AUDIO_SAMPLE_RATE,
-                smart_format=True,
-            )
-
             print("Sending request to Deepgram...")
-            r = deepgram_client.listen.prerecorded.v("1").transcribe_file(
-                payload, options, timeout=httpx.Timeout(DEEPGRAM_TIMEOUT, connect=10.0)
+            r = await deepgram_client.listen.asyncrest.v("1").transcribe_file(
+                payload,
+                self.options,
+                timeout=httpx.Timeout(DEEPGRAM_TIMEOUT, connect=10.0),
             )
             print("Received transcript results from Deepgram...")
 
