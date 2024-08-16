@@ -1,7 +1,7 @@
 import pytest
-from app.backend.add_courses.document.text_processing import TextProcessor
-from app.backend.add_courses.document.vector_db_operations import VectorDBOperations
-from app.backend.add_courses.document.document_processor import DocumentProcessor
+from llama_sensei.backend.add_courses.document.text_processing import TextProcessor
+from llama_sensei.backend.add_courses.document.vector_db_operations import VectorDBOperations
+from llama_sensei.backend.add_courses.document.document_processor import DocumentProcessor
 
 @pytest.fixture
 def text_processor():

@@ -1,4 +1,4 @@
-from app.backend.add_courses.document.document_processor import DocumentProcessor
+from llama_sensei.backend.add_courses.document.document_processor import DocumentProcessor
 
 def test_end_to_end_processing_and_search():
     doc_processor = DocumentProcessor("integration_test_collection")

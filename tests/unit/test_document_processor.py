@@ -1,5 +1,6 @@
 import pytest
-from  app.backend.add_courses.document.document_processor import DocumentProcessor
+from llama_sensei.backend.add_courses.document.document_processor import DocumentProcessor
+
 @pytest.fixture
 def document_processor():
     # Ensure a unique collection name for each test to avoid interference
