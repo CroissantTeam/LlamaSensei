@@ -1,4 +1,11 @@
+chromadb==0.5.5
+nltk==3.8.1
+sentence-transformers==3.0.1
+torch==2.3.1
+torchaudio==2.3.1
+torchvision==0.18.1
+transformers==4.42.4
+pytest==8.3.2
+pytest-mock==3.14.0
 requests
 yt-dlp
-sentence_transformers
-nltk
