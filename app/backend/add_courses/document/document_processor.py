@@ -3,31 +3,40 @@ from .vector_db_operations import VectorDBOperations
 
 
 class DocumentProcessor:
-    def __init__(self, collection_name):
+    def __init__(self, collection_name, persist_directory=None):
         self.text_processor = TextProcessor()
-        self.vector_db = VectorDBOperations()
+        self.vector_db = VectorDBOperations(persist_directory)
         self.collection_name = collection_name
+        self.vector_db.create_collection(collection_name)
+        self.chunk_counter = 0  # To ensure unique IDs across multiple documents
 
-    def process_document(self, text, metadata):
+    def process_document(self, sentences):
+        if not sentences:  # Handle empty input case
+            return
+
         # Preprocess
-        preprocessed_text = ' '.join(self.text_processor.preprocess(text))
+        preprocessed_sentences = [
+            {
+                'text': self.text_processor.preprocess(s['text']),
+                'start': s['start'],
+                'end': s['end'],
+            }
+            for s in sentences
+        ]
 
         # Chunk
-        chunks = self.text_processor.chunk_text(preprocessed_text)
+        chunks = self.text_processor.chunk_text(preprocessed_sentences)
 
-        # Embed and store each chunk
-        for i, chunk in enumerate(chunks):
-            embedding = self.text_processor.get_embedding(chunk)
-            chunk_metadata = {**metadata, "chunk_id": i}
+        # Add chunks to ChromaDB
+        for chunk in chunks:
+            chunk_id = f"chunk_{self.chunk_counter}"
             self.vector_db.add_embedding(
                 self.collection_name,
-                embedding,
-                chunk_metadata,
-                f"{metadata['video_id']}_{i}",
+                chunk['text'],
+                {"start": chunk['start'], "end": chunk['end']},
+                chunk_id,
             )
+            self.chunk_counter += 1  # Ensure unique IDs
 
     def search(self, query, top_k=5):
-        query_embedding = self.text_processor.get_embedding(query)
-        return self.vector_db.search_embeddings(
-            self.collection_name, query_embedding, top_k
-        )
+        return self.vector_db.search_embeddings(self.collection_name, query, top_k)

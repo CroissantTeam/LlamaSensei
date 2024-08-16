@@ -11,19 +11,52 @@ nltk.download('stopwords')
 class TextProcessor:
     def __init__(self):
         self.stop_words = set(stopwords.words('english'))
-        self.tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
-        self.model = AutoModel.from_pretrained("bert-base-uncased")
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            "sentence-transformers/all-MiniLM-L6-v2"
+        )
+        self.model = AutoModel.from_pretrained("sentence-transformers/all-MiniLM-L6-v2")
 
     def preprocess(self, text):
         tokens = word_tokenize(text.lower())
-        return [token for token in tokens if token not in self.stop_words]
+        return ' '.join([token for token in tokens if token not in self.stop_words])
 
-    def chunk_text(self, text, chunk_size=100):
-        words = text.split()
-        return [
-            ' '.join(words[i : i + chunk_size])
-            for i in range(0, len(words), chunk_size)
-        ]
+    def chunk_text(self, sentences, max_tokens=512):
+        chunks = []
+        current_chunk = []
+        current_tokens = 0
+        chunk_start = None
+        chunk_end = None
+
+        for sentence in sentences:
+            tokens = self.tokenizer.encode(sentence['text'], add_special_tokens=False)
+            if current_tokens + len(tokens) > max_tokens and current_chunk:
+                chunks.append(
+                    {
+                        'text': ' '.join([s['text'] for s in current_chunk]),
+                        'start': chunk_start,
+                        'end': chunk_end,
+                    }
+                )
+                current_chunk = []
+                current_tokens = 0
+                chunk_start = None
+
+            current_chunk.append(sentence)
+            current_tokens += len(tokens)
+            if chunk_start is None:
+                chunk_start = sentence['start']
+            chunk_end = sentence['end']
+
+        if current_chunk:
+            chunks.append(
+                {
+                    'text': ' '.join([s['text'] for s in current_chunk]),
+                    'start': chunk_start,
+                    'end': chunk_end,
+                }
+            )
+
+        return chunks
 
     def get_embedding(self, text):
         inputs = self.tokenizer(
