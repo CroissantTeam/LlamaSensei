@@ -33,17 +33,21 @@ class GenerateRAGAnswer:
         # Join the extracted text with double newlines
         context = "\n\n".join(context_texts)
 
-        prompt_template = f"""
+        prompt_template = (
+            """
             You are a teaching assistant.
-            Given a set of relevant information from teacher's recording during the lesson (delimited by <info></info>), please compose an answer to the question of a student.
+            Given a set of relevant information from teacher's recording during the lesson """
+            """(delimited by <info></info>), please compose an answer to the question of a student.
             Ensure that the answer is accurate, has a friendly tone, and sounds helpful.
             If you cannot answer, ask the student to clarify the question.
-            If no context is available in the system, please answer that you can not find the relevant context in the system.
+            If no context is available in the system, """
+            f"""please answer that you can not find the relevant context in the system.
             <info>
             {context}
             </info>
             Question: {self.query}
             Answer: """
+        )
 
         return prompt_template
 

@@ -2,7 +2,7 @@ import json
 
 
 class TranscriptLoader:
-    def __init__(self, file_path="stanford_cs229_l1.json"):
+    def __init__(self, file_path):
         self.file_path = file_path
         self.data = None
 

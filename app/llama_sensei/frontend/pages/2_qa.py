@@ -24,7 +24,8 @@ if "messages" not in st.session_state:
 def more_info(evidence: dict):
     for ctx in evidence["context_list"]:
         st.markdown(
-            f"**Context** (start from [here](https://www.youtube.com/watch?v={ctx['metadata']['video_id']}&t={ctx['metadata']['start']}s)): {ctx['context']}\n"
+            "**Context** (start from [here](https://www.youtube.com/watch?v="
+            f"{ctx['metadata']['video_id']}&t={ctx['metadata']['start']}s)): {ctx['context']}\n"
         )
 
     st.markdown(f"**Faithfulness Score:** {evidence['f_score']:.4f}\n")

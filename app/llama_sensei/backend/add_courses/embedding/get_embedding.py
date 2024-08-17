@@ -1,11 +1,13 @@
 from typing import List
 
+import torch
 from sentence_transformers import SentenceTransformer
 
 
 class Embedder:
     def __init__(self, model_name="all-MiniLM-L12-v2"):
-        self.model = SentenceTransformer(model_name, trust_remote_code=True).cuda()
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.model = SentenceTransformer(model_name, trust_remote_code=True).to(device)
 
     def embed(self, doc):
         return self.model.encode(doc)
