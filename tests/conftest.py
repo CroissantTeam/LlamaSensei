@@ -10,6 +10,6 @@ from llama_sensei.backend.add_courses.vectordb.document_processor import Documen
 def vector_db():
     return VectorDBOperations()
 
-@pytest.fixture
-def document_processor():
-    return DocumentProcessor("test_collection")
+# @pytest.fixture
+# def document_processor():
+#     return DocumentProcessor("test_collection")
