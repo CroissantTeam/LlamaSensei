@@ -14,4 +14,4 @@ aiofiles
 deepgram-sdk
 python-dotenv
 # oauth2 for download youtube video on EC2 instance
-https://github.com/coletdjnz/yt-dlp-youtube-oauth2/archive/refs/heads/master.zip
+yt-dlp-youtube-oauth2 @ https://github.com/coletdjnz/yt-dlp-youtube-oauth2/archive/refs/heads/master.zip
