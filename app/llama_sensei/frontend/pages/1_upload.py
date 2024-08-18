@@ -39,27 +39,32 @@ if st.button("Add new"):
 st.write("Paste the youtube link of the course:")
 url = st.text_input("Example: https://www.youtube.com/watch?list=PLoROMvodv4rMiGQp3WXShtMGgzqpfVfbU")
 
-if st.button("Upload"):
-    fetcher = PlaylistVideosFetcher()
-    video_urls = fetcher.get_playlist_videos(url)
-    print(video_urls)
+def upload():
+    try:
+        fetcher = PlaylistVideosFetcher()
+        video_urls = fetcher.get_playlist_videos(url)
+        print(video_urls)
 
-    downloader = YouTubeAudioDownloader("data/", course_name=course_name)
-    downloader.download_audio(video_urls)
-    print('Download success')
+        downloader = YouTubeAudioDownloader("data/", course_name=course_name)
+        downloader.download_audio(video_urls)
+        print('Download success')
 
-    audio_list = glob.glob(os.path.join("data", course_name, "audio/*.wav"))
-    deepgram_client = DeepgramSTTClient(
-        os.path.join("data/transcript", course_name)
-    )
-    asyncio.run(deepgram_client.get_transcripts(audio_list))
-    print("transcript success")
-
-    proc = DocumentProcessor(course_name, search_only=False)
-    folder_path = f"data/transcript/{course_name}/"
-    for video_id in os.listdir(folder_path):
-        proc.process_document(
-            path=os.path.join(folder_path, video_id), metadata={'video_id': video_id.split('.')[0]}
+        audio_list = glob.glob(os.path.join("data", course_name, "audio/*.wav"))
+        deepgram_client = DeepgramSTTClient(
+            os.path.join("data/transcript", course_name)
         )
+        asyncio.run(deepgram_client.get_transcripts(audio_list))
+        print("transcript success")
 
-    print ("Completed upload")
+        proc = DocumentProcessor(course_name, search_only=False)
+        folder_path = f"data/transcript/{course_name}/"
+        for video_id in os.listdir(folder_path):
+            proc.process_document(
+                path=os.path.join(folder_path, video_id), metadata={'video_id': video_id.split('.')[0]}
+            )
+    except Exception as e:
+        st.error(f"An error occurred while uploading: {str(e)}")
+        st.rerun()
+    st.success("Completed upload")
+
+st.button("Upload", on_click=upload)

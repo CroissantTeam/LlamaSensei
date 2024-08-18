@@ -6,6 +6,8 @@ from llama_sensei.backend.add_courses.vectordb.document_processor import (
 from ragas import evaluate
 from ragas.metrics import faithfulness
 
+from datetime import datetime
+
 MODEL = "llama3-70b-8192"
 
 
@@ -52,15 +54,22 @@ class GenerateRAGAnswer:
         return prompt_template
 
     def generate_answer(self) -> str:
+        before = datetime.now()
         self.retrieve_contexts()
+        print(f"Retrieve context time: {datetime.now() - before} seconds")
         final_prompt = self.gen_prompt()
+        
+        before = datetime.now()
         res = self.model.invoke(final_prompt)
+        print(f"LLM return time: {datetime.now() - before} seconds")
 
         llm_answer = res['content'] if isinstance(res, dict) else res.content
 
         # Calculate score
+        before = datetime.now()
         faithfulness_score = self.calculate_faithfulness(llm_answer)
         answer_relevancy_score = self.calculate_answer_relevancy(llm_answer)
+        print(f"Eval answer time: {datetime.now() - before} seconds")
 
         context_list = [
             {"context": ctx["text"], "metadata": ctx["metadata"]}
