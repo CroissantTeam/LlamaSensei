@@ -4,7 +4,12 @@ from llama_sensei.backend.add_courses.vectordb.document_processor import (
     DocumentProcessor,
 )
 from ragas import evaluate
-from ragas.metrics import faithfulness
+from ragas.metrics import (
+    answer_relevancy,
+    faithfulness,
+    context_recall,
+    context_precision,
+)
 
 MODEL = "llama3-70b-8192"
 
@@ -81,7 +86,7 @@ class GenerateRAGAnswer:
 
         return llm_answer, evidence
 
-    def calculate_faithfulness(self, generated_answer: str) -> float:
+    def calculate_score(self, generated_answer: str) -> float:
         if not self.contexts:
             raise ValueError(
                 "Contexts have not been retrieved. Ensure contexts are retrieved before this method is called."
@@ -98,34 +103,36 @@ class GenerateRAGAnswer:
         dataset = Dataset.from_dict(data_samples)
 
         # Evaluate faithfulness
-        score = evaluate(dataset, metrics=[faithfulness], llm=model)
+        score = evaluate(dataset, metrics=[faithfulness, answer_relevancy], llm=model)
 
         # Convert score to pandas DataFrame and get the first score
         score_df = score.to_pandas()
-        return score_df['faithfulness'].iloc[0]
+        result = score_df[['faithfulness', 'answer_relevancy']].iloc[0].to_dict()
+        return result
 
-    def calculate_answer_relevancy(self, generated_answer: str) -> float:
-        if not self.contexts:
-            raise ValueError(
-                "Contexts have not been retrieved. Ensure contexts are retrieved before this method is called."
-            )
 
-        model = self.model
+    # def calculate_answer_relevancy(self, generated_answer: str) -> float:
+    #     if not self.contexts:
+    #         raise ValueError(
+    #             "Contexts have not been retrieved. Ensure contexts are retrieved before this method is called."
+    #         )
 
-        # Prepare the dataset for evaluation
-        data_samples = {
-            'question': [self.query],
-            'answer': [generated_answer],
-            'contexts': [[val["text"] for val in self.contexts]],
-        }
-        dataset = Dataset.from_dict(data_samples)
+    #     model = self.model
 
-        # Evaluate faithfulness
-        score = evaluate(dataset, metrics=[faithfulness], llm=model)
+    #     # Prepare the dataset for evaluation
+    #     data_samples = {
+    #         'question': [self.query],
+    #         'answer': [generated_answer],
+    #         'contexts': [[val["text"] for val in self.contexts]],
+    #     }
+    #     dataset = Dataset.from_dict(data_samples)
 
-        # Convert score to pandas DataFrame and get the first score
-        score_df = score.to_pandas()
-        return score_df['faithfulness'].iloc[0]
+    #     # Evaluate faithfulness
+    #     score = evaluate(dataset, metrics=[faithfulness], llm=model)
+
+    #     # Convert score to pandas DataFrame and get the first score
+    #     score_df = score.to_pandas()
+    #     return score_df['faithfulness'].iloc[0]
 
 
 # Example usage
