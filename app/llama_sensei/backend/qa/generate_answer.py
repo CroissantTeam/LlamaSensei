@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from datasets import Dataset
 from langchain_groq import ChatGroq
 from llama_sensei.backend.add_courses.vectordb.document_processor import (
@@ -5,8 +7,6 @@ from llama_sensei.backend.add_courses.vectordb.document_processor import (
 )
 from ragas import evaluate
 from ragas.metrics import faithfulness
-
-from datetime import datetime
 
 MODEL = "llama3-70b-8192"
 
@@ -58,7 +58,7 @@ class GenerateRAGAnswer:
         self.retrieve_contexts()
         print(f"Retrieve context time: {datetime.now() - before} seconds")
         final_prompt = self.gen_prompt()
-        
+
         before = datetime.now()
         res = self.model.invoke(final_prompt)
         print(f"LLM return time: {datetime.now() - before} seconds")

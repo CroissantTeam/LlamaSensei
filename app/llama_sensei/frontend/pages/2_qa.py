@@ -1,5 +1,6 @@
-import chromadb
 import time
+
+import chromadb
 import streamlit as st
 from llama_sensei.backend.qa.generate_answer import GenerateRAGAnswer
 
@@ -7,6 +8,7 @@ from llama_sensei.backend.qa.generate_answer import GenerateRAGAnswer
 def get_courses():
     client = chromadb.PersistentClient(path="data/chroma_db")
     return [x.name for x in client.list_collections()]
+
 
 st.set_page_config(layout="wide")
 
@@ -46,10 +48,12 @@ def response_generator(input: str):
     answer, evidence = rag_generator.generate_answer()
     return answer, evidence
 
+
 def streaming(input: str):
     for w in input.split(" "):
         yield w + " "
         time.sleep(0.05)
+
 
 # React to user input
 if prompt := st.chat_input("What is up?"):
