@@ -1,6 +1,9 @@
-from ..embedding.get_embedding import Embedder
-from ..embedding.load_text import TranscriptLoader
-from ..embedding.preprocessing_text import TextPreprocessor
+from llama_sensei.backend.add_courses.embedding.get_embedding import Embedder
+from llama_sensei.backend.add_courses.embedding.load_text import TranscriptLoader
+from llama_sensei.backend.add_courses.embedding.preprocessing_text import (
+    TextPreprocessor,
+)
+
 from .vector_db_operations import VectorDBOperations
 
 
