@@ -1,11 +1,13 @@
 import time
 
+import chromadb
 import streamlit as st
 from llama_sensei.backend.qa.generate_answer import GenerateRAGAnswer
 
 
 def get_courses():
-    return ["cs229_stanford", "cs224n_stanford", "cs231n_stanford"]
+    client = chromadb.PersistentClient(path="data/chroma_db")
+    return [x.name for x in client.list_collections()]
 
 
 st.set_page_config(layout="wide")
@@ -24,8 +26,7 @@ if "messages" not in st.session_state:
 def more_info(evidence: dict):
     for ctx in evidence["context_list"]:
         st.markdown(
-            "**Context** (start from [here](https://www.youtube.com/watch?v="
-            f"{ctx['metadata']['video_id']}&t={ctx['metadata']['start']}s)): {ctx['context']}\n"
+            f"**Context** (start from [here](https://www.youtube.com/watch?v={ctx['metadata']['video_id']}&t={ctx['metadata']['start']}s)): {ctx['context']}\n"
         )
 
     st.markdown(f"**Faithfulness Score:** {evidence['f_score']:.4f}\n")
@@ -43,7 +44,7 @@ for message in st.session_state.messages:
 
 # Streamed response emulator
 def response_generator(input: str):
-    rag_generator = GenerateRAGAnswer(query=prompt, course=course_name)
+    rag_generator = GenerateRAGAnswer(query=input, course=course_name)
     answer, evidence = rag_generator.generate_answer()
     return answer, evidence
 
