@@ -1,7 +1,6 @@
 from ..embedding.get_embedding import Embedder
 from ..embedding.load_text import TranscriptLoader
 from ..embedding.preprocessing_text import TextPreprocessor
-
 from .vector_db_operations import VectorDBOperations
 
 
