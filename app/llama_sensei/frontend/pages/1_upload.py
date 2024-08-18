@@ -1,3 +1,4 @@
+import asyncio
 import chromadb
 import glob
 import streamlit as st
@@ -47,9 +48,12 @@ if st.button("Upload"):
     downloader.download_audio(video_urls)
     print('Download success')
 
-    audio_list = glob.glob("data/audio/*.wav")
-    deepgram_client = DeepgramSTTClient(f"data/transcript/{course_name}/")
-    deepgram_client.get_transcripts(audio_list)
+    audio_list = glob.glob(os.path.join("data", course_name, "audio/*.wav"))
+    deepgram_client = DeepgramSTTClient(
+        os.path.join("data/transcript", course_name)
+    )
+    asyncio.run(deepgram_client.get_transcripts(audio_list))
+    print("transcript success")
 
     proc = DocumentProcessor(course_name, search_only=False)
     folder_path = f"data/transcript/{course_name}/"
@@ -57,3 +61,5 @@ if st.button("Upload"):
         proc.process_document(
             path=os.path.join(folder_path, video_id), metadata={'video_id': video_id.split('.')[0]}
         )
+
+    print ("Completed upload")
