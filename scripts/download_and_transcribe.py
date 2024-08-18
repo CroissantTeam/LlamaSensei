@@ -7,9 +7,9 @@ from llama_sensei.backend.add_courses.yt_api.audio import YouTubeAudioDownloader
 from llama_sensei.backend.add_courses.yt_api.playlist import PlaylistVideosFetcher
 
 if __name__ == "__main__":
-    playlist_url = "https://www.youtube.com/watch?v=jGwO_UgTS7I&list=PLoROMvodv4rMiGQp3WXShtMGgzqpfVfbU"
-    course_name = "cs229_stanford"
-    out_dir = "./data"
+    playlist_url = "https://www.youtube.com/watch?v=8rXD5-xhemo&list=PLoROMvodv4rOhcuXMZkNm7j3fVwBBY42z"
+    course_name = "cs224n_stanford"
+    out_dir = "/shared/final"
     fetcher = PlaylistVideosFetcher()
     video_urls = fetcher.get_playlist_videos(playlist_url)
     print(video_urls)
