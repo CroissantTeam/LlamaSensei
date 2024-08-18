@@ -24,6 +24,8 @@ class YouTubeAudioDownloader:
             ],
             'no_warnings': True,
             'quiet': True,
+            'username': 'oauth2',
+            'password': '',
         }
 
     def download_audio(self, urls: List[str]):

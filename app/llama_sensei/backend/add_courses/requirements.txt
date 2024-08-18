@@ -1,3 +1,2 @@
 deepgram-sdk
 python-dotenv
-soundfile

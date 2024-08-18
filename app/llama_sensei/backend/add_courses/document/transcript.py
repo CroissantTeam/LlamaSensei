@@ -30,6 +30,7 @@ class DeepgramSTTClient:
         if len(audio_files) == 0:
             print("There is no file to transcribe")
             return
+
         for filename in audio_files:
             save_name = os.path.basename(filename).split(".")[0] + ".json"
             save_transcript_path = os.path.join(self.output_path, save_name)
