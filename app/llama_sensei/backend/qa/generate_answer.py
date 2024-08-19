@@ -10,8 +10,19 @@ from ragas.metrics import (
     context_recall,
     context_precision,
 )
+from sentence_transformers import SentenceTransformer # embedding llm
+import torch
+from langchain_community.tools import DuckDuckGoSearchResults
+from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
+from langchain_community.embeddings import SentenceTransformerEmbeddings
+import re
+import numpy as np
+from llama_sensei.backend.add_courses.embedding.get_embedding import Embedder
 
 MODEL = "llama3-70b-8192"
+# device = "cuda" if torch.cuda.is_available() else "cpu"
+# EMBEDDING_LLM = SentenceTransformer("all-MiniLM-L12-v2", trust_remote_code=True).to(device)
+EMBEDDING_LLM = SentenceTransformerEmbeddings(model_name = "all-MiniLM-L12-v2", model_kwargs={"trust_remote_code":True})
 
 
 class GenerateRAGAnswer:
@@ -26,14 +37,23 @@ class GenerateRAGAnswer:
         result = processor.search(self.query)
         # print(result)
         self.contexts = [
-            {"text": text, "metadata": metadata}
-            for text, metadata in zip(result['documents'][0], result['metadatas'][0])
+            {
+                "text": text,
+                "metadata": metadata,
+                "embedding": embedding
+            }
+            for text, metadata, embedding in zip(result['documents'][0], result['metadatas'][0], result['embeddings'][0])
         ]  # Store contexts for use in prompt generation and evaluation
+
         return self.contexts
 
-    def gen_prompt(self) -> str:
+
+    def gen_prompt(self, context_texts = None) -> str:
         # Extract the 'text' field from each context dictionary
-        context_texts = [f"{ctx['text']}" for ctx in self.contexts]
+        if context_texts == None:
+            context_texts = [f"{ctx['text']}" for ctx in self.contexts]
+        else:
+            pass
 
         # Join the extracted text with double newlines
         context = "\n\n".join(context_texts)
@@ -55,36 +75,64 @@ class GenerateRAGAnswer:
         )
 
         return prompt_template
+    
+    # def parse_results_string(self, results_str):
+    #     # Regular expression to match the pattern for snippet, title, and link
+    #     pattern = r"\[snippet:\s*(.*?),\s*title:\s*(.*?),\s*link:\s*(.*?)\]"
+        
+    #     # Use re.findall to extract all matches
+    #     matches = re.findall(pattern, results_str)
+        
+    #     # Convert matches into a list of dictionaries
+    #     results = []
+    #     for match in matches:
+    #         result_dict = {
+    #             "snippet": match[0].strip(),
+    #             "title": match[1].strip(),
+    #             "link": match[2].strip()
+    #         }
+    #         results.append(result_dict)
+        
+    #     return results
+    
+    def external_search(self) -> dict:
+        # search_tool = DuckDuckGoSearchResults(max_results=5)
+        # result = search_tool.invoke(f"{self.query}")
+        
+        # # Parse the result from DuckDuckGo
+        # parsed_results = self.parse_results_string(result)
+        
+        # # Optionally, store or process the parsed results as needed
+        # return parsed_results
+        wrapper = DuckDuckGoSearchAPIWrapper(max_results=5)
+        search_tool = DuckDuckGoSearchResults(api_wrapper=wrapper)
+        results = search_tool.results(self.query, max_results = 5)
+        
+        return results
+    
+    def calculate_context_relevancy(self) -> float:
+        # Embed the query
+        embedder = Embedder()
+        embedded_query = embedder.embed(self.query)
+        
+        # Retrieve the embeddings
+        similarity_scores = []
 
-    def generate_answer(self) -> str:
-        self.retrieve_contexts()
-        final_prompt = self.gen_prompt()
-        res = self.model.invoke(final_prompt)
+        for context in self.contexts:
+            context_embedding = np.asarray(context["embedding"]).reshape(1, -1)
 
-        llm_answer = res['content'] if isinstance(res, dict) else res.content
+            # Calculate the cosine similarity
+            dot_product = np.dot(context_embedding, embedded_query.T).reshape(-1)
+            norm_product = np.linalg.norm(context_embedding) * np.linalg.norm(embedded_query)
+            similarity = dot_product / norm_product
 
-        # Calculate score
-        faithfulness_score = self.calculate_faithfulness(llm_answer)
-        answer_relevancy_score = self.calculate_answer_relevancy(llm_answer)
+            similarity_scores.append(similarity.item())
 
-        context_list = [
-            {"context": ctx["text"], "metadata": ctx["metadata"]}
-            for ctx in self.contexts
-        ]
-
-        # evidence = (
-        #    f"**Retrieved Contexts:**\n{context_str}\n\n"
-        #    f"**Faithfulness Score:** {faithfulness_score:.4f}\n"
-        #    f"**Answer Relevancy Score:** {answer_relevancy_score:.4f}"
-        # )
-
-        evidence = {
-            "context_list": context_list,
-            "f_score": faithfulness_score,
-            "ar_score": answer_relevancy_score,
-        }
-
-        return llm_answer, evidence
+        # Calculate and return the mean of the similarity scores
+        if similarity_scores:
+            return np.mean(similarity_scores)
+        else:
+            return 0.0
 
     def calculate_score(self, generated_answer: str) -> float:
         if not self.contexts:
@@ -98,51 +146,101 @@ class GenerateRAGAnswer:
         data_samples = {
             'question': [self.query],
             'answer': [generated_answer],
-            'contexts': [[val["text"] for val in self.contexts]],
+            'contexts': [[val["text"] for val in self.contexts]]
         }
         dataset = Dataset.from_dict(data_samples)
 
         # Evaluate faithfulness
-        score = evaluate(dataset, metrics=[faithfulness, answer_relevancy], llm=model)
+        faithfulness = evaluate(dataset, metrics=[faithfulness], llm = model, embeddings = EMBEDDING_LLM)
+        
+        # Calculate context relevancy
+        relevancy_score = self.calculate_context_relevancy()
 
         # Convert score to pandas DataFrame and get the first score
-        score_df = score.to_pandas()
-        result = score_df[['faithfulness', 'answer_relevancy']].iloc[0].to_dict()
+        score_df = faithfulness.to_pandas()
+        f_score = score_df[['faithfulness']].iloc[0]
+        
+        result = {
+            'faithfulness': f_score,
+            'answer_relevancy': relevancy_score
+        }
+        
         return result
+    
+    def generate_answer(self, mode = None) -> str:
+        if mode == "external":
+            search_results = self.external_search()
+            context = [val['snippet'] for val in search_results]
+            final_prompt = self.gen_prompt(context_texts = context)
+            llm_answer = res['content'] if isinstance(res, dict) else res.content
+            
+            embedder = Embedder()  # Initialize the embedder
 
+            # Populate self.contexts with 'text' and 'embedding'
+            self.contexts = [
+                {
+                    "text": result['snippet'],
+                    "embedding": embedder.embed(result['snippet'])[0]
+                }
+                for result in results
+            ]
 
-    # def calculate_answer_relevancy(self, generated_answer: str) -> float:
-    #     if not self.contexts:
-    #         raise ValueError(
-    #             "Contexts have not been retrieved. Ensure contexts are retrieved before this method is called."
-    #         )
+            # Calculate score
+            score = self.calculate_score(llm_answer)
 
-    #     model = self.model
+            context_list = [
+                {"context": ctx["text"], "metadata": ctx["metadata"]}
+                for ctx in self.contexts
+            ]
 
-    #     # Prepare the dataset for evaluation
-    #     data_samples = {
-    #         'question': [self.query],
-    #         'answer': [generated_answer],
-    #         'contexts': [[val["text"] for val in self.contexts]],
-    #     }
-    #     dataset = Dataset.from_dict(data_samples)
+            evidence = {
+                "context_list": context_list,
+                "f_score": score['faithfulness'],
+                "ar_score": score['answer_relevancy'],
+            }
 
-    #     # Evaluate faithfulness
-    #     score = evaluate(dataset, metrics=[faithfulness], llm=model)
+            return llm_answer, evidence
+        
+        else:
+            self.retrieve_contexts()
+            final_prompt = self.gen_prompt(context_texts = self.contexts)
+            res = self.model.invoke(final_prompt)
+            # llm_answer = res['content'] if isinstance(res, dict) else res.content
+            llm_answer = res['content'] if isinstance(res, dict) else res.content
+            
+            # Calculate score
+            score = self.calculate_score(llm_answer)
 
-    #     # Convert score to pandas DataFrame and get the first score
-    #     score_df = score.to_pandas()
-    #     return score_df['faithfulness'].iloc[0]
+            context_list = [
+                {"context": ctx["text"], "metadata": ctx["metadata"]}
+                for ctx in self.contexts
+            ]
 
+            evidence = {
+                "context_list": context_list,
+                "f_score": score['faithfulness'],
+                "ar_score": score['answer_relevancy'],
+            }
+
+            return llm_answer, evidence
+        
+        # # Concatenate the external search result with the LLM's answer
+        # if external_result:
+        # # Assuming external_result is a list of dictionaries, we concatenate the snippets with links
+        #     external_info = "\n".join(
+        #         f"External Source {i + 1}: {item['snippet']}\nRead more: {item['link']}"
+        #         for i, item in enumerate(external_result)
+        #     )
+        #     llm_answer = f"{llm_answer}\n\nAdditional Information:\n{external_info}"
 
 # Example usage
 if __name__ == "__main__":
     prompt = "What method do we use if we want to predict house price in an area?"
-    course = "cs229_stanford"
+    course_name = "cs229_stanford"
 
     # Create an instance of GenerateRAGAnswer with the query and course
-    rag_generator = GenerateRAGAnswer(query=prompt, course=course)
+    rag_generator = GenerateRAGAnswer(query=prompt, course=course_name)
 
     # Generate and print the answer along with its embedded faithfulness score
-    answer = rag_generator.generate_answer()
-    print(answer)
+    answer, evidence = rag_generator.generate_answer()
+    print("answer:\n" + answer + "\nevidence:\n" + evidence)
