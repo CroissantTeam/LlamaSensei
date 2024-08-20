@@ -32,7 +32,9 @@ class VectorDBOperations:
         try:
             collection = self.client.get_collection(collection_name)
             results = collection.query(
-                query_embeddings=[query_embedding.tolist()], n_results=top_k
+                query_embeddings=[query_embedding.tolist()], 
+                n_results=top_k,
+                include=['documents', 'embeddings', 'metadatas']
             )
             print("Search successfully")
             return results

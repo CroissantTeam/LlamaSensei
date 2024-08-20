@@ -35,7 +35,8 @@ class GenerateRAGAnswer:
     def retrieve_contexts(self):
         processor = DocumentProcessor(self.course, search_only=True)
         result = processor.search(self.query)
-        # print(result)
+        
+        #print(result)
         self.contexts = [
             {
                 "text": text,
@@ -51,6 +52,7 @@ class GenerateRAGAnswer:
     def gen_prompt(self, context_texts = None) -> str:
         # Extract the 'text' field from each context dictionary
         if context_texts == None:
+            # print (self.contexts)
             context_texts = [f"{ctx['text']}" for ctx in self.contexts]
         else:
             pass
@@ -151,13 +153,13 @@ class GenerateRAGAnswer:
         dataset = Dataset.from_dict(data_samples)
 
         # Evaluate faithfulness
-        faithfulness = evaluate(dataset, metrics=[faithfulness], llm = model, embeddings = EMBEDDING_LLM)
+        score = evaluate(dataset, metrics=[faithfulness], llm = model, embeddings = EMBEDDING_LLM)
         
         # Calculate context relevancy
         relevancy_score = self.calculate_context_relevancy()
 
         # Convert score to pandas DataFrame and get the first score
-        score_df = faithfulness.to_pandas()
+        score_df = score.to_pandas()
         f_score = score_df[['faithfulness']].iloc[0]
         
         result = {
@@ -203,7 +205,7 @@ class GenerateRAGAnswer:
         
         else:
             self.retrieve_contexts()
-            final_prompt = self.gen_prompt(context_texts = self.contexts)
+            final_prompt = self.gen_prompt()
             res = self.model.invoke(final_prompt)
             # llm_answer = res['content'] if isinstance(res, dict) else res.content
             llm_answer = res['content'] if isinstance(res, dict) else res.content
@@ -243,4 +245,5 @@ if __name__ == "__main__":
 
     # Generate and print the answer along with its embedded faithfulness score
     answer, evidence = rag_generator.generate_answer()
-    print("answer:\n" + answer + "\nevidence:\n" + evidence)
+    print("answer:\n" + answer)
+    #print(evidence)
