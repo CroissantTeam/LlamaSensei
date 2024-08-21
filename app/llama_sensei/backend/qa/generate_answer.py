@@ -2,17 +2,19 @@ from datetime import datetime
 
 from datasets import Dataset
 from langchain_groq import ChatGroq
-from llama_sensei.backend.add_courses.vectordb.document_processor import DocumentProcessor
+from llama_sensei.backend.add_courses.vectordb.document_processor import (
+    DocumentProcessor,
+)
 from llama_sensei.backend.add_courses.embedding.get_embedding import Embedder
 from ragas import evaluate
 from ragas.metrics import (answer_relevancy, faithfulness)
-import torch
 from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
 from langchain_community.embeddings import SentenceTransformerEmbeddings
-import re
 import numpy as np
 from llama_sensei.backend.add_courses.embedding.get_embedding import Embedder
 from sklearn.metrics.pairwise import cosine_similarity
+
+import time
 
 MODEL = "llama3-70b-8192"
 # device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -150,7 +152,8 @@ class GenerateRAGAnswer:
 
         return top_contexts
     
-    def generate_answer(self, indb: bool, internet: bool) -> str:
+    def prepare_context(self, indb: bool, internet: bool) -> str:
+        before = datetime.now()
         if internet:
             search_results = self.external_search()
             # Populate self.contexts with 'text' and 'embedding'
@@ -164,14 +167,23 @@ class GenerateRAGAnswer:
                 for result in search_results
             ]
 
-        if indb:
+        if indb == True:
             self.retrieve_contexts()
 
         self.contexts = self.rank_and_select_top_contexts(top_n=5)
-        
+
+        print(f"Retrieve context time: {datetime.now() - before} seconds")
+
+    def generate_llm_answer(self):
         final_prompt = self.gen_prompt()
-        res = self.model.invoke(final_prompt)
-        llm_answer = res['content'] if isinstance(res, dict) else res.content
+        for chunk in self.model.stream(final_prompt):
+            yield chunk.content
+            time.sleep(0.05)
+
+    def cal_evidence(self, llm_answer) -> str:
+        # Calculate score
+        before = datetime.now()
+        
 
         context_list = [
             {"context": ctx["text"], "metadata": ctx["metadata"]}
@@ -187,7 +199,8 @@ class GenerateRAGAnswer:
             "ar_score": score['answer_relevancy'],
         }
 
-        return llm_answer, evidence
+        print(f"Eval answer time: {datetime.now() - before} seconds")
+        return evidence
 
 # Example usage
 if __name__ == "__main__":
