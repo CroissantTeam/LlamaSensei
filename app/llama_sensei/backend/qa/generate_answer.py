@@ -128,12 +128,10 @@ class GenerateRAGAnswer:
         
         return result
     
-    def rank_and_select_top_contexts(internet_contexts, database_contexts, top_n=5):
-        # Combine both contexts into one list for comparison
-        all_contexts = internet_contexts + database_contexts
+    def rank_and_select_top_contexts(self, top_n=5):
         
         # Extract the embeddings
-        all_embeddings = [context['embedding'] for context in all_contexts]
+        all_embeddings = [context['embedding'] for context in self.contexts]
         
         # Compute cosine similarity between all contexts
         similarity_matrix = cosine_similarity(all_embeddings, all_embeddings)
@@ -145,7 +143,7 @@ class GenerateRAGAnswer:
         top_indices = similarity_sums.argsort()[-top_n:][::-1]
         
         # Collect the top contexts based on the computed indices, including their text and metadata
-        top_contexts = [all_contexts[index] for index in top_indices]
+        top_contexts = [self.contexts[index] for index in top_indices]
 
         return top_contexts
     
@@ -165,26 +163,11 @@ class GenerateRAGAnswer:
 
         if indb:
             self.retrieve_contexts()
-            
-        if internet and indb:
-            search_results = self.external_search()
-            # Populate self.contexts with 'text' and 'embedding'
-            embedder = Embedder()  # Initialize the embedder
-            internet_contexts = [
-                {
-                    "text": result['snippet'],
-                    "metadata": {"link": result['link']},
-                    "embedding": embedder.embed(result['snippet'])
-                }
-                for result in search_results
-            ]
-            
-            database_contexts = self.retrieve_contexts()
-            self.contexts = self.rank_and_select_top_contexts(internet_contexts, database_contexts, top_n=5)
+
+        self.contexts = self.rank_and_select_top_contexts(top_n=5)
         
         final_prompt = self.gen_prompt()
         res = self.model.invoke(final_prompt)
-        # llm_answer = res['content'] if isinstance(res, dict) else res.content
         llm_answer = res['content'] if isinstance(res, dict) else res.content
 
         context_list = [
