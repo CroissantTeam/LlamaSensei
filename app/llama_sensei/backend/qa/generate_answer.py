@@ -1,23 +1,15 @@
 from datasets import Dataset
 from langchain_groq import ChatGroq
-from llama_sensei.backend.add_courses.vectordb.document_processor import (
-    DocumentProcessor,
-)
+from llama_sensei.backend.add_courses.vectordb.document_processor import DocumentProcessor
 from ragas import evaluate
-from ragas.metrics import (
-    answer_relevancy,
-    faithfulness,
-    context_recall,
-    context_precision,
-)
-from sentence_transformers import SentenceTransformer # embedding llm
+from ragas.metrics import (answer_relevancy, faithfulness)
 import torch
-from langchain_community.tools import DuckDuckGoSearchResults
 from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 import re
 import numpy as np
 from llama_sensei.backend.add_courses.embedding.get_embedding import Embedder
+from sklearn.metrics.pairwise import cosine_similarity
 
 MODEL = "llama3-70b-8192"
 # device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -44,6 +36,8 @@ class GenerateRAGAnswer:
                     "metadata": metadata,
                     "embedding": embedding
                 })  # Store contexts for use in prompt generation and evaluation
+            
+        return self.contexts
 
 
     def gen_prompt(self) -> str:
@@ -73,7 +67,6 @@ class GenerateRAGAnswer:
     
     def external_search(self) -> dict:
         wrapper = DuckDuckGoSearchAPIWrapper(max_results=5)
-        #search_tool = DuckDuckGoSearchResults(api_wrapper=wrapper)
         results = wrapper.results(self.query, max_results = 5)
         
         return results
@@ -135,6 +128,27 @@ class GenerateRAGAnswer:
         
         return result
     
+    def rank_and_select_top_contexts(internet_contexts, database_contexts, top_n=5):
+        # Combine both contexts into one list for comparison
+        all_contexts = internet_contexts + database_contexts
+        
+        # Extract the embeddings
+        all_embeddings = [context['embedding'] for context in all_contexts]
+        
+        # Compute cosine similarity between all contexts
+        similarity_matrix = cosine_similarity(all_embeddings, all_embeddings)
+        
+        # Rank each context by summing its similarities with all other contexts
+        similarity_sums = similarity_matrix.sum(axis=1)
+        
+        # Get the indices of the top N contexts based on similarity sum
+        top_indices = similarity_sums.argsort()[-top_n:][::-1]
+        
+        # Collect the top contexts based on the computed indices, including their text and metadata
+        top_contexts = [all_contexts[index] for index in top_indices]
+
+        return top_contexts
+    
     def generate_answer(self, indb: bool, internet: bool) -> str:
         if internet:
             search_results = self.external_search()
@@ -151,6 +165,22 @@ class GenerateRAGAnswer:
 
         if indb:
             self.retrieve_contexts()
+            
+        if internet and indb:
+            search_results = self.external_search()
+            # Populate self.contexts with 'text' and 'embedding'
+            embedder = Embedder()  # Initialize the embedder
+            internet_contexts = [
+                {
+                    "text": result['snippet'],
+                    "metadata": {"link": result['link']},
+                    "embedding": embedder.embed(result['snippet'])
+                }
+                for result in search_results
+            ]
+            
+            database_contexts = self.retrieve_contexts()
+            self.contexts = self.rank_and_select_top_contexts(internet_contexts, database_contexts, top_n=5)
         
         final_prompt = self.gen_prompt()
         res = self.model.invoke(final_prompt)
