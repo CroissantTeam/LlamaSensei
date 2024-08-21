@@ -5,8 +5,11 @@ from langchain_groq import ChatGroq
 from llama_sensei.backend.add_courses.vectordb.document_processor import (
     DocumentProcessor,
 )
+from llama_sensei.backend.add_courses.embedding.get_embedding import Embedder
 from ragas import evaluate
 from ragas.metrics import faithfulness
+
+import time
 
 MODEL = "llama3-70b-8192"
 
@@ -53,18 +56,36 @@ class GenerateRAGAnswer:
 
         return prompt_template
 
-    def generate_answer(self) -> str:
+    def external_search(self):
+        pass
+
+    def prepare_context(self, indb: bool, internet: bool):
         before = datetime.now()
-        self.retrieve_contexts()
+        if internet == True:
+            search_results = self.external_search()
+            # Populate self.contexts with 'text' and 'embedding'
+            embedder = Embedder()  # Initialize the embedder
+            self.contexts = [
+                {
+                    "text": result['snippet'],
+                    "metadata": {"link": result['link']},
+                    "embedding": embedder.embed(result['snippet'])
+                }
+                for result in search_results
+            ]
+
+        if indb == True:
+            self.retrieve_contexts()
+
         print(f"Retrieve context time: {datetime.now() - before} seconds")
+
+    def generate_llm_answer(self):
         final_prompt = self.gen_prompt()
+        for chunk in self.model.stream(final_prompt):
+            yield chunk.content
+            time.sleep(0.05)
 
-        before = datetime.now()
-        res = self.model.invoke(final_prompt)
-        print(f"LLM return time: {datetime.now() - before} seconds")
-
-        llm_answer = res['content'] if isinstance(res, dict) else res.content
-
+    def cal_evidence(self, llm_answer) -> str:
         # Calculate score
         before = datetime.now()
         faithfulness_score = self.calculate_faithfulness(llm_answer)
@@ -88,7 +109,7 @@ class GenerateRAGAnswer:
             "ar_score": answer_relevancy_score,
         }
 
-        return llm_answer, evidence
+        return evidence
 
     def calculate_faithfulness(self, generated_answer: str) -> float:
         if not self.contexts:
