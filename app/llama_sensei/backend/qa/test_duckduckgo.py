@@ -73,4 +73,4 @@ query = "What method do we use if we want to predict house price in an area?"
 # Call the results method
 results = search_wrapper.results(query=query, max_results = 5)
 
-print(results)
+print(results[0]['snippet'][100:])

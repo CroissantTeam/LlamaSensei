@@ -30,32 +30,25 @@ class GenerateRAGAnswer:
         self.query = query
         self.course = course
         self.model = ChatGroq(model=model, temperature=0)
-        self.contexts = None  # To store the retrieved contexts
+        self.contexts = []  # To store the retrieved contexts
 
     def retrieve_contexts(self):
         processor = DocumentProcessor(self.course, search_only=True)
         result = processor.search(self.query)
         
         #print(result)
-        self.contexts = [
-            {
-                "text": text,
-                "metadata": metadata,
-                "embedding": embedding
-            }
-            for text, metadata, embedding in zip(result['documents'][0], result['metadatas'][0], result['embeddings'][0])
-        ]  # Store contexts for use in prompt generation and evaluation
-
-        return self.contexts
+        for text, metadata, embedding in zip(result['documents'][0], result['metadatas'][0], result['embeddings'][0]):
+            self.contexts.append(
+                {
+                    "text": text,
+                    "metadata": metadata,
+                    "embedding": embedding
+                })  # Store contexts for use in prompt generation and evaluation
 
 
-    def gen_prompt(self, context_texts = None) -> str:
+    def gen_prompt(self) -> str:
         # Extract the 'text' field from each context dictionary
-        if context_texts == None:
-            # print (self.contexts)
-            context_texts = [f"{ctx['text']}" for ctx in self.contexts]
-        else:
-            pass
+        context_texts = [f"{ctx['text']}" for ctx in self.contexts]
 
         # Join the extracted text with double newlines
         context = "\n\n".join(context_texts)
@@ -78,37 +71,10 @@ class GenerateRAGAnswer:
 
         return prompt_template
     
-    # def parse_results_string(self, results_str):
-    #     # Regular expression to match the pattern for snippet, title, and link
-    #     pattern = r"\[snippet:\s*(.*?),\s*title:\s*(.*?),\s*link:\s*(.*?)\]"
-        
-    #     # Use re.findall to extract all matches
-    #     matches = re.findall(pattern, results_str)
-        
-    #     # Convert matches into a list of dictionaries
-    #     results = []
-    #     for match in matches:
-    #         result_dict = {
-    #             "snippet": match[0].strip(),
-    #             "title": match[1].strip(),
-    #             "link": match[2].strip()
-    #         }
-    #         results.append(result_dict)
-        
-    #     return results
-    
     def external_search(self) -> dict:
-        # search_tool = DuckDuckGoSearchResults(max_results=5)
-        # result = search_tool.invoke(f"{self.query}")
-        
-        # # Parse the result from DuckDuckGo
-        # parsed_results = self.parse_results_string(result)
-        
-        # # Optionally, store or process the parsed results as needed
-        # return parsed_results
         wrapper = DuckDuckGoSearchAPIWrapper(max_results=5)
-        search_tool = DuckDuckGoSearchResults(api_wrapper=wrapper)
-        results = search_tool.results(self.query, max_results = 5)
+        #search_tool = DuckDuckGoSearchResults(api_wrapper=wrapper)
+        results = wrapper.results(self.query, max_results = 5)
         
         return results
     
@@ -162,8 +128,6 @@ class GenerateRAGAnswer:
         score_df = score.to_pandas()
         f_score = score_df[['faithfulness']].iloc[0, 0]
         
-        print(f_score)
-
         result = {
             'faithfulness': f_score,
             'answer_relevancy': relevancy_score
@@ -171,71 +135,43 @@ class GenerateRAGAnswer:
         
         return result
     
-    def generate_answer(self, mode = None) -> str:
-        if mode == "external":
+    def generate_answer(self, indb: bool, internet: bool) -> str:
+        if internet:
             search_results = self.external_search()
-            context = [val['snippet'] for val in search_results]
-            final_prompt = self.gen_prompt(context_texts = context)
-            llm_answer = res['content'] if isinstance(res, dict) else res.content
-            
-            embedder = Embedder()  # Initialize the embedder
-
             # Populate self.contexts with 'text' and 'embedding'
+            embedder = Embedder()  # Initialize the embedder
             self.contexts = [
                 {
                     "text": result['snippet'],
-                    "embedding": embedder.embed(result['snippet'])[0]
+                    "metadata": {"link": result['link']},
+                    "embedding": embedder.embed(result['snippet'])
                 }
-                for result in results
+                for result in search_results
             ]
 
-            # Calculate score
-            score = self.calculate_score(llm_answer)
-
-            context_list = [
-                {"context": ctx["text"], "metadata": ctx["metadata"]}
-                for ctx in self.contexts
-            ]
-
-            evidence = {
-                "context_list": context_list,
-                "f_score": score['faithfulness'],
-                "ar_score": score['answer_relevancy'],
-            }
-
-            return llm_answer, evidence
-        
-        else:
+        if indb:
             self.retrieve_contexts()
-            final_prompt = self.gen_prompt()
-            res = self.model.invoke(final_prompt)
-            # llm_answer = res['content'] if isinstance(res, dict) else res.content
-            llm_answer = res['content'] if isinstance(res, dict) else res.content
-            
-            # Calculate score
-            score = self.calculate_score(llm_answer)
-
-            context_list = [
-                {"context": ctx["text"], "metadata": ctx["metadata"]}
-                for ctx in self.contexts
-            ]
-
-            evidence = {
-                "context_list": context_list,
-                "f_score": score['faithfulness'],
-                "ar_score": score['answer_relevancy'],
-            }
-
-            return llm_answer, evidence
         
-        # # Concatenate the external search result with the LLM's answer
-        # if external_result:
-        # # Assuming external_result is a list of dictionaries, we concatenate the snippets with links
-        #     external_info = "\n".join(
-        #         f"External Source {i + 1}: {item['snippet']}\nRead more: {item['link']}"
-        #         for i, item in enumerate(external_result)
-        #     )
-        #     llm_answer = f"{llm_answer}\n\nAdditional Information:\n{external_info}"
+        final_prompt = self.gen_prompt()
+        res = self.model.invoke(final_prompt)
+        # llm_answer = res['content'] if isinstance(res, dict) else res.content
+        llm_answer = res['content'] if isinstance(res, dict) else res.content
+
+        context_list = [
+            {"context": ctx["text"], "metadata": ctx["metadata"]}
+            for ctx in self.contexts
+        ]
+
+        # Calculate score
+        score = self.calculate_score(llm_answer)
+
+        evidence = {
+            "context_list": context_list,
+            "f_score": score['faithfulness'],
+            "ar_score": score['answer_relevancy'],
+        }
+
+        return llm_answer, evidence
 
 # Example usage
 if __name__ == "__main__":

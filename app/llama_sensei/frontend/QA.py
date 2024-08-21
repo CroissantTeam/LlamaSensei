@@ -25,10 +25,17 @@ if "messages" not in st.session_state:
 # display more info about response
 def more_info(evidence: dict):
     #print(evidence)
-    for ctx in evidence["context_list"]:
-        st.markdown(
-            f"**Context** (start from [here](https://www.youtube.com/watch?v={ctx['metadata']['video_id']}&t={ctx['metadata']['start']}s)): {ctx['context']}\n"
-        )
+    tabs = st.tabs([str(i + 1) for i in range(len(evidence["context_list"]))])
+    for (i, ctx) in enumerate(evidence["context_list"]):
+        with tabs[i]:
+            if 'link' in ctx['metadata']:
+                st.markdown(
+                    f"**Context** ([source]({ctx['metadata']['link']})): {ctx['context']}\n"
+                )
+            else:
+                st.markdown(
+                    f"**Context** ([source](https://www.youtube.com/watch?v={ctx['metadata']['video_id']}&t={ctx['metadata']['start']}s)): {ctx['context']}\n"
+                )
 
     st.markdown(f"**Faithfulness Score:** {evidence['f_score']:.4f}\n")
     st.markdown(f"**Answer Relevancy Score:** {evidence['ar_score']:.4f}")
@@ -44,9 +51,9 @@ for message in st.session_state.messages:
 
 
 # Streamed response emulator
-def response_generator(input: str):
+def response_generator(input: str, indb: bool, internet: bool):
     rag_generator = GenerateRAGAnswer(query=input, course=course_name)
-    answer, evidence = rag_generator.generate_answer()
+    answer, evidence = rag_generator.generate_answer(indb, internet)
     return answer, evidence
 
 
@@ -55,6 +62,10 @@ def streaming(input: str):
         yield w + " "
         time.sleep(0.05)
 
+with st.sidebar:
+    st.write("Choose resources to search from: ")
+    indb = st.checkbox("Course's record", value=True)
+    internet = st.checkbox("Internet")
 
 # React to user input
 if prompt := st.chat_input("What is up?"):
@@ -68,7 +79,7 @@ if prompt := st.chat_input("What is up?"):
         st.session_state.messages.append({"role": "user", "content": prompt})
 
         with st.chat_message("assistant"):
-            answer, evidence = response_generator(prompt)
+            answer, evidence = response_generator(prompt, indb, internet)
             st.write_stream(streaming(answer))
             # print(evidence)
             with st.expander("More information"):
