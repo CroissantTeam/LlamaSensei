@@ -160,8 +160,10 @@ class GenerateRAGAnswer:
 
         # Convert score to pandas DataFrame and get the first score
         score_df = score.to_pandas()
-        f_score = score_df[['faithfulness']].iloc[0]
+        f_score = score_df[['faithfulness']].iloc[0, 0]
         
+        print(f_score)
+
         result = {
             'faithfulness': f_score,
             'answer_relevancy': relevancy_score
