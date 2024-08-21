@@ -170,7 +170,8 @@ class GenerateRAGAnswer:
         if indb == True:
             self.retrieve_contexts()
 
-        self.contexts = self.rank_and_select_top_contexts(top_n=5)
+        if indb == True or internet == True:
+            self.contexts = self.rank_and_select_top_contexts(top_n=5)
 
         print(f"Retrieve context time: {datetime.now() - before} seconds")
 
