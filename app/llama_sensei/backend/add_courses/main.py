@@ -5,13 +5,12 @@ import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
-
-from .document.transcript import DeepgramSTTClient
-from .schemas import AddCourseRequest, SearchQuery, SearchResponse
-from .vectordb.document_processor import DocumentProcessor
-from .vectordb.vector_db_operations import VectorDBOperations
-from .yt_api.audio import YouTubeAudioDownloader
-from .yt_api.playlist import PlaylistVideosFetcher
+from schemas import AddCourseRequest, SearchQuery, SearchResponse
+from speech_to_text.transcript import DeepgramSTTClient
+from vectordb.document_processor import DocumentProcessor
+from vectordb.vector_db_operations import VectorDBOperations
+from yt_api.audio import YouTubeAudioDownloader
+from yt_api.playlist import PlaylistVideosFetcher
 
 DATA_SAVE_DIR = "data/"
 load_dotenv()
@@ -92,7 +91,7 @@ def main():
         "main:app",
         host=os.getenv("COURSE_FASTAPI_HOST", "127.0.0.1"),
         port=int(os.getenv("COURSE_FASTAPI_PORT", 8002)),
-        reload=True,  # Uncomment this for debug
+        # reload=True,  # Uncomment this for debug
         # workers=2,
     )
 

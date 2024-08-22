@@ -44,8 +44,6 @@ for message in st.session_state.messages:
 
 # Streamed response emulator
 def response_generator(input: str):
-    # rag_generator = GenerateRAGAnswer(query=input, course=course_name)
-    # answer, evidence = rag_generator.generate_answer()
     chat_query = {"question": input, "course": course_name}
     r = requests.post("http://localhost:8000/generate_answer", json=chat_query)
     print("*" * 20, r.json())

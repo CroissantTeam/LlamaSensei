@@ -4,7 +4,7 @@ import os
 
 import chromadb
 import streamlit as st
-from llama_sensei.backend.add_courses.document.transcript import DeepgramSTTClient
+from llama_sensei.backend.add_courses.speech_to_text.transcript import DeepgramSTTClient
 from llama_sensei.backend.add_courses.vectordb.document_processor import (
     DocumentProcessor,
 )

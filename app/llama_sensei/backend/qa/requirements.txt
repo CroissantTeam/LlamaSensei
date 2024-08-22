@@ -1,0 +1,6 @@
+fastapi[standard]
+python-dotenv
+requests
+datasets
+langchain-groq
+ragas

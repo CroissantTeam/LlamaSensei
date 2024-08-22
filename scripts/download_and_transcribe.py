@@ -2,7 +2,7 @@ import asyncio
 import glob
 import os
 
-from llama_sensei.backend.add_courses.document.transcript import DeepgramSTTClient
+from llama_sensei.backend.add_courses.speech_to_text.transcript import DeepgramSTTClient
 from llama_sensei.backend.add_courses.yt_api.audio import YouTubeAudioDownloader
 from llama_sensei.backend.add_courses.yt_api.playlist import PlaylistVideosFetcher
 

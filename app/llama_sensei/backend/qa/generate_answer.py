@@ -1,10 +1,8 @@
 from datetime import datetime
 
+import requests
 from datasets import Dataset
 from langchain_groq import ChatGroq
-from llama_sensei.backend.add_courses.vectordb.document_processor import (
-    DocumentProcessor,
-)
 from ragas import evaluate
 from ragas.metrics import faithfulness
 
@@ -18,15 +16,23 @@ class GenerateRAGAnswer:
         self.model = ChatGroq(model=model, temperature=0)
         self.contexts = None  # To store the retrieved contexts
 
-    def retrieve_contexts(self):
-        processor = DocumentProcessor(self.course, search_only=True)
-        result = processor.search(self.query)
-        # print(result)
-        self.contexts = [
-            {"text": text, "metadata": metadata}
-            for text, metadata in zip(result['documents'][0], result['metadatas'][0])
-        ]  # Store contexts for use in prompt generation and evaluation
-        return self.contexts
+    def retrieve_contexts(self, top_k=5):
+        search_query = {
+            "course_name": self.course,
+            "text": self.query,
+            "top_k": top_k,
+        }
+        try:
+            r = requests.post(url="http://localhost:8001/search", json=search_query)
+            response = r.json()
+
+            self.contexts = [
+                {"text": text, "metadata": metadata}
+                for text, metadata in zip(response['documents'], response['metadatas'])
+            ]
+            return self.contexts
+        except Exception:
+            raise
 
     def gen_prompt(self) -> str:
         # Extract the 'text' field from each context dictionary
