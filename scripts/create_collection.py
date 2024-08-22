@@ -4,6 +4,7 @@ from llama_sensei.backend.add_courses.vectordb.document_processor import (
 
 proc = DocumentProcessor('cs229_stanford', search_only=False)
 proc.process_document(
-    path="data/stanford_cs229_l1.json", metadata={'video_id': "jGwO_UgTS7I"}
+    path="data/cs229_stanford/transcript/0rt2CsEQv6U.json",
+    metadata={'video_id': "0rt2CsEQv6U"},
 )
 # print(proc.vector_db.client.list_collections())
