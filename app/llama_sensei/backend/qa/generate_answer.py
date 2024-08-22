@@ -55,6 +55,10 @@ class GenerateRAGAnswer:
 
     def generate_answer(self) -> str:
         before = datetime.now()
+        #################################################################################
+        # process retrieve or not
+        #################################################################################
+
         self.retrieve_contexts()
         print(f"Retrieve context time: {datetime.now() - before} seconds")
         final_prompt = self.gen_prompt()
@@ -67,8 +71,8 @@ class GenerateRAGAnswer:
 
         # Calculate score
         before = datetime.now()
-        faithfulness_score = self.calculate_faithfulness(llm_answer)
-        answer_relevancy_score = self.calculate_answer_relevancy(llm_answer)
+        # faithfulness_score = self.calculate_faithfulness(llm_answer)
+        # answer_relevancy_score = self.calculate_answer_relevancy(llm_answer)
         print(f"Eval answer time: {datetime.now() - before} seconds")
 
         context_list = [
@@ -84,8 +88,8 @@ class GenerateRAGAnswer:
 
         evidence = {
             "context_list": context_list,
-            "f_score": faithfulness_score,
-            "ar_score": answer_relevancy_score,
+            # "f_score": faithfulness_score,
+            # "ar_score": answer_relevancy_score,
         }
 
         return llm_answer, evidence

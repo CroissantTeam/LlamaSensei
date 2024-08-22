@@ -1,8 +1,8 @@
 import time
 
 import chromadb
+import requests
 import streamlit as st
-from llama_sensei.backend.qa.generate_answer import GenerateRAGAnswer
 
 
 def get_courses():
@@ -44,9 +44,13 @@ for message in st.session_state.messages:
 
 # Streamed response emulator
 def response_generator(input: str):
-    rag_generator = GenerateRAGAnswer(query=input, course=course_name)
-    answer, evidence = rag_generator.generate_answer()
-    return answer, evidence
+    # rag_generator = GenerateRAGAnswer(query=input, course=course_name)
+    # answer, evidence = rag_generator.generate_answer()
+    chat_query = {"question": input, "course": course_name}
+    r = requests.post("http://localhost:8000/generate_answer", json=chat_query)
+    print("*" * 20, r.json())
+    response = r.json()
+    return response["answer"], response["evidence"]
 
 
 def streaming(input: str):
