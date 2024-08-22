@@ -3,29 +3,29 @@ from datetime import datetime
 
 import numpy as np
 from datasets import Dataset
-from langchain_community.embeddings import SentenceTransformerEmbeddings
+from sentence_transformers import SentenceTransformer
 from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
 from langchain_groq import ChatGroq
-from llama_sensei.backend.add_courses.embedding.get_embedding import Embedder
 from llama_sensei.backend.add_courses.vectordb.document_processor import (
     DocumentProcessor,
 )
 from ragas import evaluate
 from ragas.metrics import faithfulness
 from sklearn.metrics.pairwise import cosine_similarity
+import torch
 
 MODEL = "llama3-70b-8192"
 # device = "cuda" if torch.cuda.is_available() else "cpu"
 # EMBEDDING_LLM = SentenceTransformer("all-MiniLM-L12-v2", trust_remote_code=True).to(device)
-EMBEDDING_LLM = SentenceTransformerEmbeddings(
-    model_name="all-MiniLM-L12-v2", model_kwargs={"trust_remote_code": True}
-)
+EMBEDDING_LLM = "all-MiniLM-L12-v2"
 
 
 class GenerateRAGAnswer:
     def __init__(self, query: str, course: str, model=MODEL):
         self.query = query
         self.course = course
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.embedder = SentenceTransformer(EMBEDDING_LLM, trust_remote_code=True).to(device)
         self.model = ChatGroq(model=model, temperature=0)
         self.contexts = []  # To store the retrieved contexts
 
@@ -75,9 +75,8 @@ class GenerateRAGAnswer:
         return results
 
     def calculate_context_relevancy(self) -> float:
-        # Embed the query
-        embedder = Embedder()
-        embedded_query = embedder.embed(self.query)
+        # Embed the query]
+        embedded_query = self.embedder.encode(self.query)
 
         # Retrieve the embeddings
         similarity_scores = []
@@ -118,7 +117,7 @@ class GenerateRAGAnswer:
 
         # Evaluate faithfulness
         score = evaluate(
-            dataset, metrics=[faithfulness], llm=model, embeddings=EMBEDDING_LLM
+            dataset, metrics=[faithfulness], llm=model, embeddings=self.embedder
         )
 
         # Calculate context relevancy
@@ -155,20 +154,19 @@ class GenerateRAGAnswer:
         if internet:
             search_results = self.external_search()
             # Populate self.contexts with 'text' and 'embedding'
-            embedder = Embedder()  # Initialize the embedder
             self.contexts = [
                 {
                     "text": result['snippet'],
                     "metadata": {"link": result['link']},
-                    "embedding": embedder.embed(result['snippet']),
+                    "embedding": self.embedder.encode(result['snippet']),
                 }
                 for result in search_results
             ]
 
-        if indb is True:
+        if indb:
             self.retrieve_contexts()
 
-        if indb is True or internet is True:
+        if indb or internet:
             self.contexts = self.rank_and_select_top_contexts(top_n=5)
 
         print(f"Retrieve context time: {datetime.now() - before} seconds")
