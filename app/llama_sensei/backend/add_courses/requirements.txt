@@ -1,2 +1,13 @@
+chromadb==0.5.5
+nltk==3.8.1
+sentence-transformers==3.0.1
+torch==2.3.1
+transformers==4.42.4
+fastapi[standard]
 deepgram-sdk
 python-dotenv
+requests
+yt-dlp
+aiofiles
+python-dotenv
+yt-dlp-youtube-oauth2 @ https://github.com/coletdjnz/yt-dlp-youtube-oauth2/archive/refs/heads/master.zip

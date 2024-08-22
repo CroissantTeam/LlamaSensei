@@ -38,3 +38,6 @@ class VectorDBOperations:
             return results
         except Exception as e:
             print(f"Search failed: {str(e)}")
+
+    def get_collections(self):
+        return [x.name for x in self.client.list_collections()]

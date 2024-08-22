@@ -2,7 +2,6 @@ import os
 from datetime import datetime
 from typing import List
 
-import aiofiles
 import httpx
 from deepgram import DeepgramClient, FileSource, PrerecordedOptions
 from dotenv import load_dotenv
@@ -26,7 +25,7 @@ class DeepgramSTTClient:
             smart_format=True,
         )
 
-    async def get_transcripts(self, audio_files: List[str]):
+    def get_transcripts(self, audio_files: List[str]):
         if len(audio_files) == 0:
             print("There is no file to transcribe")
             return
@@ -37,7 +36,7 @@ class DeepgramSTTClient:
             if os.path.exists(save_transcript_path):
                 print(f"file {save_name} existed")
             else:
-                await self.transcribe(filename, save_transcript_path)
+                self.transcribe(filename, save_transcript_path)
 
         # task_list = []
         # for filename in audio_files:
@@ -50,14 +49,14 @@ class DeepgramSTTClient:
 
         # await asyncio.gather(*task_list)
 
-    async def transcribe(self, audio_file: str, save_file: str):
+    def transcribe(self, audio_file: str, save_file: str):
         try:
             print("Connecting to Deepgram...")
             deepgram_client = DeepgramClient(DEEPGRAM_API_KEY)
             print("Connect successful!")
 
-            async with aiofiles.open(audio_file, "rb") as file:
-                buffer_data = await file.read()
+            with open(audio_file, "rb") as file:
+                buffer_data = file.read()
 
             payload: FileSource = {
                 "buffer": buffer_data,
@@ -65,7 +64,7 @@ class DeepgramSTTClient:
 
             print("Sending request to Deepgram...")
             before = datetime.now()
-            r = await deepgram_client.listen.asyncrest.v("1").transcribe_file(
+            r = deepgram_client.listen.rest.v("1").transcribe_file(
                 payload,
                 self.options,
                 timeout=httpx.Timeout(DEEPGRAM_TIMEOUT, connect=10.0),

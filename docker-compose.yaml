@@ -1,0 +1,47 @@
+services:
+
+  # frontend-streamlit:
+  #   container_name: frontend-streamlit
+  #   build: ./app/llama_sensei/frontend
+  #   ports:
+  #     - 8081:8081
+  #   environment:
+  #     - BACKEND_URL=http://backend-api:8080
+  #   volumes:
+  #     - ./app/llama_sensei/frontend:/app
+  #   depends_on:
+  #     - "course_management_api"
+  #     - "chat_api"
+  #   command: ["streamlit", "run", "UI.py", "--server.port", "8081"]
+
+  course_management_api:
+    container_name: course_management_api
+    build: ./app/llama_sensei/backend/add_courses
+    env_file:
+      - .env
+    ports:
+      - ${AGG_FASTAPI_PORT}:${AGG_FASTAPI_PORT}
+    environment:
+      - SEARCH_API_URL=http://search_api:${SEARCH_FASTAPI_PORT}
+      - EMBEDDING_API_URL=http://embedding_api:${EMBEDDING_FASTAPI_PORT}
+    volumes:
+      - ./data:/workspace/data
+    depends_on:
+      - "search_api"
+      - "embedding_api"
+
+  chat_api:
+    container_name: chat_api
+    build: ./app/llama_sensei/backend/qa
+    env_file:
+      - .env
+    ports:
+      - ${SEARCH_FASTAPI_PORT}:${SEARCH_FASTAPI_PORT}
+    volumes:
+      - ./data:/workspace/data
+    depends_on:
+      - "course_management_api"
+
+networks:
+  default:
+    name: llama-sensei
