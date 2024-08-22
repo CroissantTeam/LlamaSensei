@@ -1,5 +1,3 @@
-import time
-
 import chromadb
 import streamlit as st
 from llama_sensei.backend.qa.generate_answer import GenerateRAGAnswer
@@ -24,9 +22,9 @@ if "messages" not in st.session_state:
 
 # display more info about response
 def more_info(evidence: dict):
-    #print(evidence)
+    # print(evidence)
     tabs = st.tabs([str(i + 1) for i in range(len(evidence["context_list"]))])
-    for (i, ctx) in enumerate(evidence["context_list"]):
+    for i, ctx in enumerate(evidence["context_list"]):
         with tabs[i]:
             if 'link' in ctx['metadata']:
                 st.markdown(
