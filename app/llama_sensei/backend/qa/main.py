@@ -1,23 +1,30 @@
 import os
 
 import uvicorn
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from generate_answer import GenerateRAGAnswer
 from schemas import ChatResponse, Question
 
-app = FastAPI()
-
-
-@app.get("/")
-async def root():
-    return {"message": "LlamaSensei: Chat API"}
+load_dotenv()
+CONTEXT_SEARCH_API_URL = f'{os.getenv("COURSE_API_URL")}/search'
+app = FastAPI(title="LlamaSensei: Chat API")
 
 
 @app.post("/generate_answer", response_model=ChatResponse)
 async def api_generate_answer(question: Question):
-    query = GenerateRAGAnswer(question.question, question.course)
-    answer, evidence = query.generate_answer()
+    rag_chain = GenerateRAGAnswer(
+        query=question.question,
+        course=question.course,
+        context_search_url=CONTEXT_SEARCH_API_URL,
+    )
+    answer, evidence = rag_chain.generate_answer()
     return ChatResponse(answer=answer, evidence=evidence)
+
+
+@app.get("/")
+async def root():
+    return {"message": "Welcome to LlamaSensei: Chat API"}
 
 
 def main():

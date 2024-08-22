@@ -10,9 +10,16 @@ MODEL = "llama3-70b-8192"
 
 
 class GenerateRAGAnswer:
-    def __init__(self, query: str, course: str, model=MODEL):
+    def __init__(
+        self,
+        query: str,
+        course: str,
+        context_search_url: str,
+        model=MODEL,
+    ):
         self.query = query
         self.course = course
+        self.context_search_url = context_search_url
         self.model = ChatGroq(model=model, temperature=0)
         self.contexts = None  # To store the retrieved contexts
 
@@ -23,7 +30,7 @@ class GenerateRAGAnswer:
             "top_k": top_k,
         }
         try:
-            r = requests.post(url="http://localhost:8001/search", json=search_query)
+            r = requests.post(url=self.context_search_url, json=search_query)
             response = r.json()
 
             self.contexts = [

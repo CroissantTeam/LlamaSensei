@@ -12,9 +12,9 @@ from vectordb.vector_db_operations import VectorDBOperations
 from yt_api.audio import YouTubeAudioDownloader
 from yt_api.playlist import PlaylistVideosFetcher
 
-DATA_SAVE_DIR = "data/"
 load_dotenv()
-vectordb = VectorDBOperations()
+DATA_SAVE_DIR = os.getenv("DATA_SAVE_DIR")
+vectordb = VectorDBOperations(DATA_SAVE_DIR)
 app = FastAPI(title="LlamaSensei: Course management API")
 
 
@@ -40,9 +40,11 @@ async def add_course(request: AddCourseRequest):
         deepgram_client.get_transcripts(audio_list)
         print("Transcript success")
 
-        proc = DocumentProcessor(request.course_name, search_only=False)
+        processor = DocumentProcessor(
+            vector_db=vectordb, collection_name=request.course_name, search_only=False
+        )
         for video_id in os.listdir(transcript_dir):
-            proc.process_document(
+            processor.process_document(
                 path=os.path.join(transcript_dir, video_id),
                 metadata={'video_id': video_id.split('.')[0]},
             )
@@ -56,6 +58,7 @@ async def add_course(request: AddCourseRequest):
 async def search(query: SearchQuery):
     try:
         document_processor = DocumentProcessor(
+            vector_db=vectordb,
             collection_name=query.course_name,
             search_only=True,
         )
@@ -73,7 +76,6 @@ async def search(query: SearchQuery):
 @app.get("/courses/")
 async def get_courses():
     try:
-        vectordb = VectorDBOperations()
         available_courses = vectordb.get_collections()
         return JSONResponse(content=available_courses)
     except Exception as e:

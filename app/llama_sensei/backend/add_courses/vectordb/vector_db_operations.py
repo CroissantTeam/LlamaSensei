@@ -1,9 +1,13 @@
+import os
+
 import chromadb
 
 
 class VectorDBOperations:
-    def __init__(self):
-        self.client = chromadb.PersistentClient(path="data/chroma_db")
+    def __init__(self, save_path):
+        self.client = chromadb.PersistentClient(
+            path=os.path.join(save_path, "chroma_db")
+        )
 
     def create_collection(self, collection_name):
         try:

@@ -10,4 +10,6 @@ RUN pip install -r requirements.txt
 
 ENV HOME=/app
 
+RUN yt-dlp --username oauth2 --password '' https://www.youtube.com/watch?v=sXrasaDZxw0
+
 CMD ["python", "main.py"]
