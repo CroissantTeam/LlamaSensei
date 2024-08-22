@@ -2,8 +2,8 @@ import time
 from datetime import datetime
 
 import numpy as np
+import torch
 from datasets import Dataset
-from sentence_transformers import SentenceTransformer
 from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
 from langchain_groq import ChatGroq
 from llama_sensei.backend.add_courses.vectordb.document_processor import (
@@ -11,8 +11,8 @@ from llama_sensei.backend.add_courses.vectordb.document_processor import (
 )
 from ragas import evaluate
 from ragas.metrics import faithfulness
+from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
-import torch
 
 MODEL = "llama3-70b-8192"
 # device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -25,7 +25,9 @@ class GenerateRAGAnswer:
         self.query = query
         self.course = course
         device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.embedder = SentenceTransformer(EMBEDDING_LLM, trust_remote_code=True).to(device)
+        self.embedder = SentenceTransformer(EMBEDDING_LLM, trust_remote_code=True).to(
+            device
+        )
         self.model = ChatGroq(model=model, temperature=0)
         self.contexts = []  # To store the retrieved contexts
 
