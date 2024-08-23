@@ -17,4 +17,4 @@ class Embedder:
             top_chunks = len(chunks)
         return [
             (chunk[0], self.embed(chunk[0]), chunk[1], chunk[2])
-            for chunk in chunks[:top_chunks]
+            for chunk in chunks[:top_chunks]]
