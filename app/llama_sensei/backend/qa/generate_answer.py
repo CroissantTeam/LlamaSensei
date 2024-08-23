@@ -32,7 +32,6 @@ class GenerateRAGAnswer:
     def retrieve_contexts(self):
         processor = DocumentProcessor(self.course, search_only=True)
         result = processor.search(self.query)
-
         for text, metadata, embedding in zip(
             result['documents'][0], result['metadatas'][0], result['embeddings'][0]
         ):
@@ -187,7 +186,6 @@ class GenerateRAGAnswer:
             {"context": ctx["text"], "metadata": ctx["metadata"]}
             for ctx in self.contexts
         ]
-
         # Calculate score
         score = self.calculate_score(llm_answer)
 
