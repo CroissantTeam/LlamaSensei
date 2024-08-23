@@ -25,7 +25,6 @@ def more_info(evidence: dict):
     if evidence['context_list'] == []:
         st.markdown("**No evidence found**")
         return
-
     tabs = st.tabs([str(i + 1) for i in range(len(evidence["context_list"]))])
     for i, ctx in enumerate(evidence["context_list"]):
         with tabs[i]:
