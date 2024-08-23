@@ -189,9 +189,9 @@ class GenerateRAGAnswer:
         # Calculate context relevancy
         relevancy_score = self.calculate_context_relevancy()
 
-        # Convert score to pandas DataFrame and get the first score
+        # Convert score to pandas DataFrame and get the mean score
         score_df = score.to_pandas()
-        f_score = score_df[['faithfulness']].iloc[0, 0]
+        f_score = score_df['faithfulness'].mean()
 
         result = {'faithfulness': f_score, 'answer_relevancy': relevancy_score}
 
@@ -207,17 +207,23 @@ class GenerateRAGAnswer:
         Returns:
             list: The top contexts selected based on their overall relevance.
         """
-        # Extract the embeddings
-        all_embeddings = [context['embedding'] for context in self.contexts]
 
-        # Compute cosine similarity between all contexts
-        similarity_matrix = cosine_similarity(all_embeddings, all_embeddings)
+        # Embed the query and reshape it to 2D array
+        embedded_query = self.embedder.encode(self.query).reshape(1, -1)
 
-        # Rank each context by summing its similarities with all other contexts
-        similarity_sums = similarity_matrix.sum(axis=1)
+        # Extract the embeddings of the contexts and ensure they are in a 2D array
+        all_embeddings = [
+            np.array(context['embedding']).reshape(1, -1) for context in self.contexts
+        ]
+        all_embeddings = np.vstack(
+            all_embeddings
+        )  # Stack to create a 2D array of all embeddings
 
-        # Get the indices of the top N contexts based on similarity sum
-        top_indices = similarity_sums.argsort()[-top_n:][::-1]
+        # Compute cosine similarity between the query embedding and each context embedding
+        similarity_scores = cosine_similarity(embedded_query, all_embeddings)[0]
+
+        # Get the indices of the top N contexts based on similarity scores
+        top_indices = similarity_scores.argsort()[-top_n:][::-1]
 
         # Collect the top contexts based on the computed indices, including their text and metadata
         top_contexts = [self.contexts[index] for index in top_indices]
