@@ -1,17 +1,19 @@
 services:
 
-  # frontend-streamlit:
-  #   container_name: frontend-streamlit
-  #   build: ./app/llama_sensei/frontend
-  #   ports:
-  #     - ${FRONTEND_PORT}:${FRONTEND_PORT}
-  #   environment:
-  #     - BACKEND_URL=http://backend-api:8080
-  #     - BACKEND_URL=http://backend-api:8080
-  #   depends_on:
-  #     - "course_management_api"
-  #     - "chat_api"
-  #   command: ["streamlit", "run", "UI.py", "--server.port", "${FRONTEND_PORT}"]
+  frontend_streamlit:
+    container_name: frontend_streamlit
+    build: ./app/llama_sensei/frontend
+    ports:
+      - ${FRONTEND_PORT}:${FRONTEND_PORT}
+    environment:
+      - COURSE_API_URL=http://course_management_api:${COURSE_FASTAPI_PORT}
+      - CHAT_API_URL=http://chat_api:${CHAT_FASTAPI_PORT}
+    command: ["streamlit", "run", "UI.py", "--server.port", "${FRONTEND_PORT}"]
+    depends_on:
+      - "course_management_api"
+      - "chat_api"
+    volumes:
+      - ./app/llama_sensei/frontend:/app
 
 
   chat_api:

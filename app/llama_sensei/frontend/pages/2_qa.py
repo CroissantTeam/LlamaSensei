@@ -1,14 +1,7 @@
 import time
 
-import chromadb
-import requests
 import streamlit as st
-
-
-def get_courses():
-    client = chromadb.PersistentClient(path="data/chroma_db")
-    return [x.name for x in client.list_collections()]
-
+from utils.client import get_courses, response_generator
 
 st.set_page_config(layout="wide")
 
@@ -42,15 +35,6 @@ for message in st.session_state.messages:
                 more_info(message["evidence"])
 
 
-# Streamed response emulator
-def response_generator(input: str):
-    chat_query = {"question": input, "course": course_name}
-    r = requests.post("http://localhost:8000/generate_answer", json=chat_query)
-    print("*" * 20, r.json())
-    response = r.json()
-    return response["answer"], response["evidence"]
-
-
 def streaming(input: str):
     for w in input.split(" "):
         yield w + " "
@@ -69,7 +53,7 @@ if prompt := st.chat_input("What is up?"):
         st.session_state.messages.append({"role": "user", "content": prompt})
 
         with st.chat_message("assistant"):
-            answer, evidence = response_generator(prompt)
+            answer, evidence = response_generator(prompt, course_name)
             st.write_stream(streaming(answer))
             # print(evidence)
             with st.expander("More information"):
