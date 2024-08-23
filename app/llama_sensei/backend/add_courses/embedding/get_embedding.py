@@ -24,6 +24,6 @@ class Embedder:
 # Usage example:
 if __name__ == "__main__":
     embedder = Embedder()
-    doc = ["troll vn troll vn troll vn"]
+    doc = "troll vn troll vn troll vn"
     doc_embedding = embedder.embed(doc)
     print(doc_embedding.shape)
