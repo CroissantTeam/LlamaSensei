@@ -15,37 +15,79 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
 MODEL = "llama3-70b-8192"
-# device = "cuda" if torch.cuda.is_available() else "cpu"
-# EMBEDDING_LLM = SentenceTransformer("all-MiniLM-L12-v2", trust_remote_code=True).to(device)
 EMBEDDING_LLM = "all-MiniLM-L12-v2"
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 class GenerateRAGAnswer:
-    def __init__(self, query: str, course: str, model=MODEL):
-        self.query = query
+    """
+    Provides a mechanism to generate answers to queries using a retrieval-augmented generation approach.
+    This class supports both internet-based and internal database context retrieval, which are then used
+    to generate responses through a large language model.
+
+    Attributes:
+        course (str): Course identifier for context retrieval from internal databases.
+        model (str): Identifier for the large language model used for generating answers.
+        embedder (SentenceTransformer): Transformer model used to compute embeddings for context relevance.
+        model (ChatGroq): Instance of the large language model initialized with specified model parameters.
+        contexts (list): List storing retrieved contexts along with metadata and embeddings.
+
+    Methods:
+        retrieve_contexts: Retrieves contexts from internal database based on the current query.
+        gen_prompt: Generates a prompt for the language model using retrieved or searched contexts.
+        external_search: Performs an internet search to retrieve contexts when internal data is insufficient.
+        calculate_context_relevancy: Calculates the relevancy of retrieved contexts to the query using cosine similarity.
+        calculate_score: Evaluates the generated answer based on faithfulness and relevance.
+        rank_and_select_top_contexts: Selects the top relevant contexts based on their similarity scores.
+        prepare_context: Prepares the necessary contexts for answering a query, from either internal or external sources.
+        generate_llm_answer: Generates an answer from the language model using the prepared prompt.
+        cal_evidence: Compiles evidence of the generated answer's quality and relevancy.
+    """
+
+    def __init__(self, course: str, model=MODEL):
+        """
+        Initializes the GenerateRAGAnswer instance with specified course and model settings.
+
+        Parameters:
+            course (str): The identifier for the course to retrieve contextual data from.
+            model (str): The model identifier for the language model used in answer generation.
+        """
+        self.query = ""
         self.course = course
-        device = "cuda" if torch.cuda.is_available() else "cpu"
         self.embedder = SentenceTransformer(EMBEDDING_LLM, trust_remote_code=True).to(
-            device
+            DEVICE
         )
         self.model = ChatGroq(model=model, temperature=0)
         self.contexts = []  # To store the retrieved contexts
 
     def retrieve_contexts(self):
+        """
+        Retrieves context data from an internal database specific to the set course and query.
+        This method populates the `contexts` list with relevant documents, their metadata, and embeddings.
+        """
         processor = DocumentProcessor(self.course, search_only=True)
         result = processor.search(self.query)
-
-        # print(result)
         for text, metadata, embedding in zip(
             result['documents'][0], result['metadatas'][0], result['embeddings'][0]
         ):
             self.contexts.append(
-                {"text": text, "metadata": metadata, "embedding": embedding}
+                {
+                    "text": text,
+                    "metadata": metadata,
+                    "embedding": embedding,
+                    "is_internal": True,
+                }
             )  # Store contexts for use in prompt generation and evaluation
 
         return self.contexts
 
     def gen_prompt(self) -> str:
+        """
+        Constructs a detailed prompt from the retrieved or searched contexts to be processed by the language model.
+
+        Returns:
+            str: A formatted string that serves as a prompt for the language model.
+        """
         # Extract the 'text' field from each context dictionary
         context_texts = [f"{ctx['text']}" for ctx in self.contexts]
 
@@ -71,13 +113,25 @@ class GenerateRAGAnswer:
         return prompt_template
 
     def external_search(self) -> dict:
+        """
+        Conducts an internet search using DuckDuckGo API to find relevant contexts when internal data is insufficient.
+
+        Returns:
+            dict: A dictionary containing snippets of text and metadata from the search results.
+        """
         wrapper = DuckDuckGoSearchAPIWrapper(max_results=5)
         results = wrapper.results(self.query, max_results=5)
 
         return results
 
     def calculate_context_relevancy(self) -> float:
-        # Embed the query]
+        """
+        Calculates the average cosine similarity between the query's embedding and the embeddings of retrieved contexts.
+
+        Returns:
+            float: The average cosine similarity score indicating relevancy of contexts to the query.
+        """
+        # Embed the query
         embedded_query = self.embedder.encode(self.query)
 
         # Retrieve the embeddings
@@ -102,10 +156,20 @@ class GenerateRAGAnswer:
             return 0.0
 
     def calculate_score(self, generated_answer: str) -> float:
+        """
+        Computes the faithfulness and relevancy scores for the generated answer based on provided contexts.
+
+        Parameters:
+            generated_answer (str): The answer generated by the language model to evaluate.
+
+        Returns:
+            dict: A dictionary containing 'faithfulness' and 'answer_relevancy' scores.
+        """
         if not self.contexts:
-            raise ValueError(
+            print(
                 "Contexts have not been retrieved. Ensure contexts are retrieved before this method is called."
             )
+            return {'faithfulness': 0, 'answer_relevancy': 0}
 
         model = self.model
 
@@ -134,6 +198,15 @@ class GenerateRAGAnswer:
         return result
 
     def rank_and_select_top_contexts(self, top_n=5):
+        """
+        Ranks and selects the top contexts based on their cosine similarity scores.
+
+        Parameters:
+            top_n (int): Number of top contexts to select.
+
+        Returns:
+            list: The top contexts selected based on their overall relevance.
+        """
         # Extract the embeddings
         all_embeddings = [context['embedding'] for context in self.contexts]
 
@@ -151,7 +224,17 @@ class GenerateRAGAnswer:
 
         return top_contexts
 
-    def prepare_context(self, indb: bool, internet: bool) -> str:
+    def prepare_context(self, indb: bool, internet: bool, query: str) -> str:
+        """
+        Prepares necessary contexts by either retrieving from the internal database or searching on the internet.
+
+        Parameters:
+            indb (bool): Flag to indicate if contexts should be retrieved from the internal database.
+            internet (bool): Flag to indicate if contexts should be searched on the internet.
+            query (str): The query for which contexts are being prepared.
+        """
+        self.query = query
+        self.contexts = []
         before = datetime.now()
         if internet:
             search_results = self.external_search()
@@ -161,6 +244,7 @@ class GenerateRAGAnswer:
                     "text": result['snippet'],
                     "metadata": {"link": result['link']},
                     "embedding": self.embedder.encode(result['snippet']),
+                    "is_internal": False,
                 }
                 for result in search_results
             ]
@@ -174,20 +258,38 @@ class GenerateRAGAnswer:
         print(f"Retrieve context time: {datetime.now() - before} seconds")
 
     def generate_llm_answer(self):
+        """
+        Generates an answer from the language model by streaming content based on the prepared prompt.
+
+        Yields:
+            str: Each content chunk generated by the language model.
+        """
         final_prompt = self.gen_prompt()
         for chunk in self.model.stream(final_prompt):
             yield chunk.content
             time.sleep(0.05)
 
     def cal_evidence(self, llm_answer) -> str:
+        """
+        Calculates and compiles evidence regarding the quality and relevancy of the language model's answer.
+
+        Parameters:
+            llm_answer (str): The generated answer to evaluate.
+
+        Returns:
+            dict: A dictionary containing the list of contexts used and their respective quality scores.
+        """
         # Calculate score
         before = datetime.now()
 
         context_list = [
-            {"context": ctx["text"], "metadata": ctx["metadata"]}
+            {
+                "context": ctx["text"],
+                "metadata": ctx["metadata"],
+                "is_internal": ctx["is_internal"],
+            }
             for ctx in self.contexts
         ]
-
         # Calculate score
         score = self.calculate_score(llm_answer)
 
@@ -199,17 +301,3 @@ class GenerateRAGAnswer:
 
         print(f"Eval answer time: {datetime.now() - before} seconds")
         return evidence
-
-
-# Example usage
-if __name__ == "__main__":
-    prompt = "What method do we use if we want to predict house price in an area?"
-    course_name = "cs229_stanford"
-
-    # Create an instance of GenerateRAGAnswer with the query and course
-    rag_generator = GenerateRAGAnswer(query=prompt, course=course_name)
-
-    # Generate and print the answer along with its embedded faithfulness score
-    answer, evidence = rag_generator.generate_answer()
-    print("answer:\n" + answer)
-    # print(evidence)

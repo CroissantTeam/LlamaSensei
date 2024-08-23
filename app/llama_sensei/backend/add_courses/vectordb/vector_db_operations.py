@@ -40,3 +40,10 @@ class VectorDBOperations:
             return results
         except Exception as e:
             print(f"Search failed: {str(e)}")
+
+    def delete_collection(self, collection_name):
+        try:
+            self.client.delete_collection(collection_name)
+            print(f"Collection '{collection_name}' deleted successfully.")
+        except Exception as e:
+            print(f"Failed to delete collection: {str(e)}")
