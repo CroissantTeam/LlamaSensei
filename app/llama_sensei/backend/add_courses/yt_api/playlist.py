@@ -36,3 +36,4 @@ class PlaylistVideosFetcher:
 
         except Exception as e:
             print(f"An error occurred: {str(e)}", file=sys.stderr)
+            return []  # Ensure an empty list is returned in case of an exception
