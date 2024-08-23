@@ -1,6 +1,7 @@
 import asyncio
 import glob
 import os
+import shutil
 
 import chromadb
 import streamlit as st
@@ -10,8 +11,6 @@ from llama_sensei.backend.add_courses.vectordb.document_processor import (
 )
 from llama_sensei.backend.add_courses.yt_api.audio import YouTubeAudioDownloader
 from llama_sensei.backend.add_courses.yt_api.playlist import PlaylistVideosFetcher
-
-import shutil
 
 if 'list_name' not in st.session_state:
     client = chromadb.PersistentClient(path="data/chroma_db")
@@ -81,5 +80,6 @@ def upload():
     # Clean up
     shutil.rmtree(os.path.join("data", course_name))
     shutil.rmtree(os.path.join("data/transcript", course_name))
+
 
 st.button("Upload", on_click=upload)

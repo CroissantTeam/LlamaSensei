@@ -15,18 +15,16 @@ from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
 MODEL = "llama3-70b-8192"
-# device = "cuda" if torch.cuda.is_available() else "cpu"
-# EMBEDDING_LLM = SentenceTransformer("all-MiniLM-L12-v2", trust_remote_code=True).to(device)
 EMBEDDING_LLM = "all-MiniLM-L12-v2"
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 class GenerateRAGAnswer:
-    def __init__(self, query: str, course: str, model=MODEL):
-        self.query = query
+    def __init__(self, course: str, model=MODEL):
+        self.query = ""
         self.course = course
-        device = "cuda" if torch.cuda.is_available() else "cpu"
         self.embedder = SentenceTransformer(EMBEDDING_LLM, trust_remote_code=True).to(
-            device
+            DEVICE
         )
         self.model = ChatGroq(model=model, temperature=0)
         self.contexts = []  # To store the retrieved contexts
@@ -35,7 +33,6 @@ class GenerateRAGAnswer:
         processor = DocumentProcessor(self.course, search_only=True)
         result = processor.search(self.query)
 
-        # print(result)
         for text, metadata, embedding in zip(
             result['documents'][0], result['metadatas'][0], result['embeddings'][0]
         ):
@@ -77,7 +74,7 @@ class GenerateRAGAnswer:
         return results
 
     def calculate_context_relevancy(self) -> float:
-        # Embed the query]
+        # Embed the query
         embedded_query = self.embedder.encode(self.query)
 
         # Retrieve the embeddings
@@ -103,9 +100,10 @@ class GenerateRAGAnswer:
 
     def calculate_score(self, generated_answer: str) -> float:
         if not self.contexts:
-            raise ValueError(
+            print(
                 "Contexts have not been retrieved. Ensure contexts are retrieved before this method is called."
             )
+            return {'faithfulness': 0, 'answer_relevancy': 0}
 
         model = self.model
 
@@ -151,7 +149,9 @@ class GenerateRAGAnswer:
 
         return top_contexts
 
-    def prepare_context(self, indb: bool, internet: bool) -> str:
+    def prepare_context(self, indb: bool, internet: bool, query: str) -> str:
+        self.query = query
+        self.contexts = []
         before = datetime.now()
         if internet:
             search_results = self.external_search()
@@ -199,17 +199,3 @@ class GenerateRAGAnswer:
 
         print(f"Eval answer time: {datetime.now() - before} seconds")
         return evidence
-
-
-# Example usage
-if __name__ == "__main__":
-    prompt = "What method do we use if we want to predict house price in an area?"
-    course_name = "cs229_stanford"
-
-    # Create an instance of GenerateRAGAnswer with the query and course
-    rag_generator = GenerateRAGAnswer(query=prompt, course=course_name)
-
-    # Generate and print the answer along with its embedded faithfulness score
-    answer, evidence = rag_generator.generate_answer()
-    print("answer:\n" + answer)
-    # print(evidence)

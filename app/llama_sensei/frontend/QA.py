@@ -22,7 +22,10 @@ if "messages" not in st.session_state:
 
 # display more info about response
 def more_info(evidence: dict):
-    # print(evidence)
+    if evidence['context_list'] == []:
+        st.markdown("**No evidence found**")
+        return
+
     tabs = st.tabs([str(i + 1) for i in range(len(evidence["context_list"]))])
     for i, ctx in enumerate(evidence["context_list"]):
         with tabs[i]:
@@ -66,11 +69,12 @@ if prompt := st.chat_input("What is up?"):
         st.session_state.messages.append({"role": "user", "content": prompt})
 
         with st.chat_message("assistant"):
-            rag_generator = GenerateRAGAnswer(query=prompt, course=course_name)
-            rag_generator.prepare_context(indb, internet)
+            if "rag_generator" not in st.session_state:
+                st.session_state.rag_generator = GenerateRAGAnswer(course=course_name)
+            rag_generator = st.session_state.rag_generator
+            rag_generator.prepare_context(indb, internet, query=prompt)
             answer = st.write_stream(rag_generator.generate_llm_answer())
             evidence = rag_generator.cal_evidence(answer)
-            # print(evidence)
             with st.expander("More information"):
                 more_info(evidence)
             # Add assistant response to chat history
