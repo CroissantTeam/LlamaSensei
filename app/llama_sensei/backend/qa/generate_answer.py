@@ -69,17 +69,21 @@ class GenerateRAGAnswer:
             r = requests.post(url=self.context_search_url, json=search_query)
             response = r.json()
 
-            self.contexts = [
-                {
-                    "text": text,
-                    "metadata": metadata,
-                    "embedding": embedding,
-                    "is_internal": True,
-                }
-                for text, metadata, embedding in zip(
-                    response['documents'], response['metadatas'], response['embeddings']
-                )
-            ]
+            self.contexts.extend(
+                [
+                    {
+                        "text": text,
+                        "metadata": metadata,
+                        "embedding": embedding,
+                        "is_internal": True,
+                    }
+                    for text, metadata, embedding in zip(
+                        response['documents'],
+                        response['metadatas'],
+                        response['embeddings'],
+                    )
+                ]
+            )
             return self.contexts
         except Exception:
             raise
