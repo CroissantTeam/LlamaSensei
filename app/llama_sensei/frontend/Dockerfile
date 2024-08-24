@@ -10,4 +10,4 @@ COPY . .
 
 EXPOSE 8081
 
-CMD ["streamlit", "run", "UI.py", "--server.port", "8081"]
+CMD ["streamlit", "run", "QA.py", "--server.port", "8081"]

@@ -3,8 +3,9 @@ import os
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
 from generate_answer import GenerateRAGAnswer
-from schemas import ChatResponse, Question
+from schemas import ChatResponse, EvaluationRequest, EvaluationResponse, Question
 
 load_dotenv()
 CONTEXT_SEARCH_API_URL = f'{os.getenv("COURSE_API_URL")}/search'
@@ -14,12 +15,29 @@ app = FastAPI(title="LlamaSensei: Chat API")
 @app.post("/generate_answer", response_model=ChatResponse)
 async def api_generate_answer(question: Question):
     rag_chain = GenerateRAGAnswer(
-        query=question.question,
         course=question.course,
         context_search_url=CONTEXT_SEARCH_API_URL,
     )
-    answer, evidence = rag_chain.generate_answer()
-    return ChatResponse(answer=answer, evidence=evidence)
+    rag_chain.prepare_context(
+        indb=question.indb,
+        internet=question.internet,
+        query=question.question,
+    )
+    return StreamingResponse(rag_chain.generate_llm_answer())
+
+
+@app.post("/evaluate", response_model=EvaluationResponse)
+def evaluate_answer(request: EvaluationRequest):
+    rag_chain = GenerateRAGAnswer(
+        course=request.course_name,
+        context_search_url=CONTEXT_SEARCH_API_URL,
+    )
+    evidence = rag_chain.run_evaluation(
+        query=request.query,
+        answer=request.answer,
+        contexts=request.contexts,
+    )
+    return EvaluationResponse(**evidence)
 
 
 @app.get("/")

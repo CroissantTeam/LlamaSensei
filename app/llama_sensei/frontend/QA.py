@@ -1,5 +1,5 @@
 import streamlit as st
-from utils.client import get_courses, response_generator
+from utils.client import evaluate_evidence, get_courses, response_generator
 
 st.set_page_config(layout="wide")
 
@@ -11,27 +11,31 @@ course_name = st.selectbox(
 # Initialize chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
+if "contexts" not in st.session_state:
+    st.session_state.contexts = []
 
 
 # display more info about response
-def more_info(evidence: dict):
-    if evidence['context_list'] == []:
+def more_info(evidence: list):
+    if not evidence:
         st.markdown("**No evidence found**")
         return
-    tabs = st.tabs([str(i + 1) for i in range(len(evidence["context_list"]))])
-    for i, ctx in enumerate(evidence["context_list"]):
+    tabs = st.tabs([str(i + 1) for i in range(len(evidence))])
+    for i, ctx in enumerate(evidence):
         with tabs[i]:
             if 'link' in ctx['metadata']:
                 st.markdown(
-                    f"**Context** ([source]({ctx['metadata']['link']})): {ctx['context']}\n"
+                    f"**Context** ([source]({ctx['metadata']['link']})): {ctx['text']}\n"
                 )
             else:
                 st.markdown(
-                    f"**Context** ([source](https://www.youtube.com/watch?v={ctx['metadata']['video_id']}&t={ctx['metadata']['start']}s)): {ctx['context']}\n"
+                    f"**Context** ([source](https://www.youtube.com/watch?v={ctx['metadata']['video_id']}&t={ctx['metadata']['start']}s)): {ctx['text']}\n"
                 )
 
-    st.markdown(f"**Faithfulness Score:** {evidence['f_score']:.4f}\n")
-    st.markdown(f"**Answer Relevancy Score:** {evidence['ar_score']:.4f}")
+
+def show_score(scores: dict):
+    st.markdown(f"**Faithfulness Score:** {scores['f_score']}\n")
+    st.markdown(f"**Answer Relevancy Score:** {scores['ar_score']}")
 
 
 # Display chat messages from history osn app rerun
@@ -41,6 +45,8 @@ for message in st.session_state.messages:
         if "evidence" in message:
             with st.expander("More information"):
                 more_info(message["evidence"])
+        if "score" in message:
+            show_score(message["score"])
 
 
 with st.sidebar:
@@ -61,20 +67,27 @@ if prompt := st.chat_input("What is up?"):
         st.session_state.messages.append({"role": "user", "content": prompt})
 
         with st.chat_message("assistant"):
-            answer, evidence = response_generator(prompt, course_name)
-            st.write_stream(answer)
-            # print(evidence)
-
-            # if "rag_generator" not in st.session_state:
-            #     st.session_state.rag_generator = GenerateRAGAnswer(course=course_name)
-            # rag_generator = st.session_state.rag_generator
-            # rag_generator.prepare_context(indb, internet, query=prompt)
-            # answer = st.write_stream(rag_generator.generate_llm_answer())
-            # evidence = rag_generator.cal_evidence(answer)
-
+            answer = st.write_stream(
+                response_generator(prompt, course_name, indb, internet)
+            )
+            evidence = st.session_state.contexts
             with st.expander("More information"):
                 more_info(evidence)
+
+            scores = evaluate_evidence(
+                query=prompt,
+                answer=answer,
+                contexts=st.session_state.contexts,
+                course=course_name,
+            )
+            show_score(scores)
+
             # Add assistant response to chat history
             st.session_state.messages.append(
-                {"role": "assistant", "content": answer, "evidence": evidence}
+                {
+                    "role": "assistant",
+                    "content": answer,
+                    "evidence": evidence,
+                    "score": scores,
+                }
             )

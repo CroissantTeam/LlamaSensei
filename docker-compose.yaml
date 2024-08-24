@@ -8,12 +8,10 @@ services:
     environment:
       - COURSE_API_URL=http://course_management_api:${COURSE_FASTAPI_PORT}
       - CHAT_API_URL=http://chat_api:${CHAT_FASTAPI_PORT}
-    command: ["streamlit", "run", "UI.py", "--server.port", "${FRONTEND_PORT}"]
+    command: ["streamlit", "run", "QA.py", "--server.port", "${FRONTEND_PORT}"]
     depends_on:
       - "course_management_api"
       - "chat_api"
-    volumes:
-      - ./app/llama_sensei/frontend:/app
 
 
   chat_api:
@@ -37,7 +35,7 @@ services:
     ports:
       - ${COURSE_FASTAPI_PORT}:${COURSE_FASTAPI_PORT}
     volumes:
-      - ./data:/app/data
+      - ./data:/data
 
 
 networks:
