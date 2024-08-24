@@ -40,7 +40,7 @@ def test_download_audio(mock_ydl, downloader, sample_urls, sample_video_info):
 
     assert result == sample_urls
     assert mock_ydl_instance.extract_info.call_count == len(sample_urls)
-    assert mock_ydl_instance.download.called_once_with(sample_urls)
+    assert mock_ydl_instance.download.assert_called_once_with(sample_urls)
 
     metadata_file = os.path.join(downloader.output_course_path, METADATA_FILENAME)
     assert os.path.exists(metadata_file)
