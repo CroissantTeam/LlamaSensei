@@ -67,7 +67,9 @@ async def search(query: SearchQuery):
             top_k=query.top_k,
         )
         return SearchResponse(
-            documents=result['documents'][0], metadatas=result['metadatas'][0]
+            documents=result['documents'][0],
+            metadatas=result['metadatas'][0],
+            metadatas=result['embeddings'][0].tolist(),
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

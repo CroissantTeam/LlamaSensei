@@ -19,11 +19,3 @@ class Embedder:
             (chunk[0], self.embed(chunk[0]), chunk[1], chunk[2])
             for chunk in chunks[:top_chunks]
         ]
-
-
-# Usage example:
-if __name__ == "__main__":
-    embedder = Embedder()
-    doc = ["troll vn troll vn troll vn"]
-    doc_embedding = embedder.embed(doc)
-    print(doc_embedding.shape)

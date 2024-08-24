@@ -26,6 +26,8 @@ course_name = st.selectbox(
 if st.button("Add new"):
     create_course()
 
+erase_db = st.checkbox("Erase all data currently in course database")
+
 st.write("Paste the youtube link of the course:")
 url = st.text_input(
     "Example: https://www.youtube.com/watch?list=PLoROMvodv4rMiGQp3WXShtMGgzqpfVfbU"

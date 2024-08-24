@@ -1,5 +1,3 @@
-import time
-
 import streamlit as st
 from utils.client import get_courses, response_generator
 
@@ -17,10 +15,20 @@ if "messages" not in st.session_state:
 
 # display more info about response
 def more_info(evidence: dict):
-    for ctx in evidence["context_list"]:
-        st.markdown(
-            f"**Context** (start from [here](https://www.youtube.com/watch?v={ctx['metadata']['video_id']}&t={ctx['metadata']['start']}s)): {ctx['context']}\n"
-        )
+    if evidence['context_list'] == []:
+        st.markdown("**No evidence found**")
+        return
+    tabs = st.tabs([str(i + 1) for i in range(len(evidence["context_list"]))])
+    for i, ctx in enumerate(evidence["context_list"]):
+        with tabs[i]:
+            if 'link' in ctx['metadata']:
+                st.markdown(
+                    f"**Context** ([source]({ctx['metadata']['link']})): {ctx['context']}\n"
+                )
+            else:
+                st.markdown(
+                    f"**Context** ([source](https://www.youtube.com/watch?v={ctx['metadata']['video_id']}&t={ctx['metadata']['start']}s)): {ctx['context']}\n"
+                )
 
     st.markdown(f"**Faithfulness Score:** {evidence['f_score']:.4f}\n")
     st.markdown(f"**Answer Relevancy Score:** {evidence['ar_score']:.4f}")
@@ -35,10 +43,10 @@ for message in st.session_state.messages:
                 more_info(message["evidence"])
 
 
-def streaming(input: str):
-    for w in input.split(" "):
-        yield w + " "
-        time.sleep(0.05)
+with st.sidebar:
+    st.write("Choose resources to search from: ")
+    indb = st.checkbox("Course's record", value=True)
+    internet = st.checkbox("Internet")
 
 
 # React to user input
@@ -54,8 +62,16 @@ if prompt := st.chat_input("What is up?"):
 
         with st.chat_message("assistant"):
             answer, evidence = response_generator(prompt, course_name)
-            st.write_stream(streaming(answer))
+            st.write_stream(answer)
             # print(evidence)
+
+            # if "rag_generator" not in st.session_state:
+            #     st.session_state.rag_generator = GenerateRAGAnswer(course=course_name)
+            # rag_generator = st.session_state.rag_generator
+            # rag_generator.prepare_context(indb, internet, query=prompt)
+            # answer = st.write_stream(rag_generator.generate_llm_answer())
+            # evidence = rag_generator.cal_evidence(answer)
+
             with st.expander("More information"):
                 more_info(evidence)
             # Add assistant response to chat history

@@ -1,27 +1,63 @@
+import time
 from datetime import datetime
 
+import numpy as np
 import requests
+import torch
 from datasets import Dataset
+from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
 from langchain_groq import ChatGroq
 from ragas import evaluate
 from ragas.metrics import faithfulness
+from sentence_transformers import SentenceTransformer
+from sklearn.metrics.pairwise import cosine_similarity
 
 MODEL = "llama3-70b-8192"
+EMBEDDING_LLM = "all-MiniLM-L12-v2"
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 class GenerateRAGAnswer:
-    def __init__(
-        self,
-        query: str,
-        course: str,
-        context_search_url: str,
-        model=MODEL,
-    ):
-        self.query = query
+    """
+    Provides a mechanism to generate answers to queries using a retrieval-augmented generation approach.
+    This class supports both internet-based and internal database context retrieval, which are then used
+    to generate responses through a large language model.
+
+    Attributes:
+        course (str): Course identifier for context retrieval from internal databases.
+        model (str): Identifier for the large language model used for generating answers.
+        embedder (SentenceTransformer): Transformer model used to compute embeddings for context relevance.
+        model (ChatGroq): Instance of the large language model initialized with specified model parameters.
+        contexts (list): List storing retrieved contexts along with metadata and embeddings.
+
+    Methods:
+        retrieve_contexts: Retrieves contexts from internal database based on the current query.
+        gen_prompt: Generates a prompt for the language model using retrieved or searched contexts.
+        external_search: Performs an internet search to retrieve contexts when internal data is insufficient.
+        calculate_context_relevancy: Calculates the relevancy of retrieved contexts to the query using cosine similarity.
+        calculate_score: Evaluates the generated answer based on faithfulness and relevance.
+        rank_and_select_top_contexts: Selects the top relevant contexts based on their similarity scores.
+        prepare_context: Prepares the necessary contexts for answering a query, from either internal or external sources.
+        generate_llm_answer: Generates an answer from the language model using the prepared prompt.
+        cal_evidence: Compiles evidence of the generated answer's quality and relevancy.
+    """
+
+    def __init__(self, course: str, context_search_url: str, model=MODEL):
+        """
+        Initializes the GenerateRAGAnswer instance with specified course and model settings.
+
+        Parameters:
+            course (str): The identifier for the course to retrieve contextual data from.
+            model (str): The model identifier for the language model used in answer generation.
+        """
+        self.query = ""
         self.course = course
         self.context_search_url = context_search_url
+        self.embedder = SentenceTransformer(EMBEDDING_LLM, trust_remote_code=True).to(
+            DEVICE
+        )
         self.model = ChatGroq(model=model, temperature=0)
-        self.contexts = None  # To store the retrieved contexts
+        self.contexts = []  # To store the retrieved contexts
 
     def retrieve_contexts(self, top_k=5):
         search_query = {
@@ -34,14 +70,27 @@ class GenerateRAGAnswer:
             response = r.json()
 
             self.contexts = [
-                {"text": text, "metadata": metadata}
-                for text, metadata in zip(response['documents'], response['metadatas'])
+                {
+                    "text": text,
+                    "metadata": metadata,
+                    "embedding": embedding,
+                    "is_internal": True,
+                }
+                for text, metadata, embedding in zip(
+                    response['documents'], response['metadatas'], response['embeddings']
+                )
             ]
             return self.contexts
         except Exception:
             raise
 
     def gen_prompt(self) -> str:
+        """
+        Constructs a detailed prompt from the retrieved or searched contexts to be processed by the language model.
+
+        Returns:
+            str: A formatted string that serves as a prompt for the language model.
+        """
         # Extract the 'text' field from each context dictionary
         context_texts = [f"{ctx['text']}" for ctx in self.contexts]
 
@@ -66,102 +115,192 @@ class GenerateRAGAnswer:
 
         return prompt_template
 
-    def generate_answer(self) -> str:
-        before = datetime.now()
-        #################################################################################
-        # process retrieve or not
-        #################################################################################
+    def external_search(self) -> dict:
+        """
+        Conducts an internet search using DuckDuckGo API to find relevant contexts when internal data is insufficient.
 
-        self.retrieve_contexts()
+        Returns:
+            dict: A dictionary containing snippets of text and metadata from the search results.
+        """
+        wrapper = DuckDuckGoSearchAPIWrapper(max_results=5)
+        results = wrapper.results(self.query, max_results=5)
+
+        return results
+
+    def calculate_context_relevancy(self) -> float:
+        """
+        Calculates the average cosine similarity between the query's embedding and the embeddings of retrieved contexts.
+
+        Returns:
+            float: The average cosine similarity score indicating relevancy of contexts to the query.
+        """
+        # Embed the query
+        embedded_query = self.embedder.encode(self.query)
+
+        # Retrieve the embeddings
+        similarity_scores = []
+
+        for context in self.contexts:
+            context_embedding = np.asarray(context["embedding"]).reshape(1, -1)
+
+            # Calculate the cosine similarity
+            dot_product = np.dot(context_embedding, embedded_query.T).reshape(-1)
+            norm_product = np.linalg.norm(context_embedding) * np.linalg.norm(
+                embedded_query
+            )
+            similarity = dot_product / norm_product
+
+            similarity_scores.append(similarity.item())
+
+        # Calculate and return the mean of the similarity scores
+        if similarity_scores:
+            return np.mean(similarity_scores)
+        else:
+            return 0.0
+
+    def calculate_score(self, generated_answer: str) -> float:
+        """
+        Computes the faithfulness and relevancy scores for the generated answer based on provided contexts.
+
+        Parameters:
+            generated_answer (str): The answer generated by the language model to evaluate.
+
+        Returns:
+            dict: A dictionary containing 'faithfulness' and 'answer_relevancy' scores.
+        """
+        if not self.contexts:
+            print(
+                "Contexts have not been retrieved. Ensure contexts are retrieved before this method is called."
+            )
+            return {'faithfulness': 0, 'answer_relevancy': 0}
+
+        model = self.model
+
+        # Prepare the dataset for evaluation
+        data_samples = {
+            'question': [self.query],
+            'answer': [generated_answer],
+            'contexts': [[val["text"] for val in self.contexts]],
+        }
+        dataset = Dataset.from_dict(data_samples)
+
+        # Evaluate faithfulness
+        score = evaluate(
+            dataset, metrics=[faithfulness], llm=model, embeddings=self.embedder
+        )
+
+        # Calculate context relevancy
+        relevancy_score = self.calculate_context_relevancy()
+
+        # Convert score to pandas DataFrame and get the first score
+        score_df = score.to_pandas()
+        f_score = score_df[['faithfulness']].iloc[0, 0]
+
+        result = {'faithfulness': f_score, 'answer_relevancy': relevancy_score}
+
+        return result
+
+    def rank_and_select_top_contexts(self, top_n=5):
+        """
+        Ranks and selects the top contexts based on their cosine similarity scores.
+
+        Parameters:
+            top_n (int): Number of top contexts to select.
+
+        Returns:
+            list: The top contexts selected based on their overall relevance.
+        """
+        # Extract the embeddings
+        all_embeddings = [context['embedding'] for context in self.contexts]
+
+        # Compute cosine similarity between all contexts
+        similarity_matrix = cosine_similarity(all_embeddings, all_embeddings)
+
+        # Rank each context by summing its similarities with all other contexts
+        similarity_sums = similarity_matrix.sum(axis=1)
+
+        # Get the indices of the top N contexts based on similarity sum
+        top_indices = similarity_sums.argsort()[-top_n:][::-1]
+
+        # Collect the top contexts based on the computed indices, including their text and metadata
+        top_contexts = [self.contexts[index] for index in top_indices]
+
+        return top_contexts
+
+    def prepare_context(self, indb: bool, internet: bool, query: str) -> str:
+        """
+        Prepares necessary contexts by either retrieving from the internal database or searching on the internet.
+
+        Parameters:
+            indb (bool): Flag to indicate if contexts should be retrieved from the internal database.
+            internet (bool): Flag to indicate if contexts should be searched on the internet.
+            query (str): The query for which contexts are being prepared.
+        """
+        self.query = query
+        self.contexts = []
+        before = datetime.now()
+        if internet:
+            search_results = self.external_search()
+            # Populate self.contexts with 'text' and 'embedding'
+            self.contexts = [
+                {
+                    "text": result['snippet'],
+                    "metadata": {"link": result['link']},
+                    "embedding": self.embedder.encode(result['snippet']),
+                    "is_internal": False,
+                }
+                for result in search_results
+            ]
+
+        if indb:
+            self.retrieve_contexts()
+
+        if indb or internet:
+            self.contexts = self.rank_and_select_top_contexts(top_n=5)
+
         print(f"Retrieve context time: {datetime.now() - before} seconds")
+
+    def generate_llm_answer(self):
+        """
+        Generates an answer from the language model by streaming content based on the prepared prompt.
+
+        Yields:
+            str: Each content chunk generated by the language model.
+        """
         final_prompt = self.gen_prompt()
+        for chunk in self.model.stream(final_prompt):
+            yield chunk.content
+            time.sleep(0.05)
 
-        before = datetime.now()
-        res = self.model.invoke(final_prompt)
-        print(f"LLM return time: {datetime.now() - before} seconds")
+    def cal_evidence(self, llm_answer) -> str:
+        """
+        Calculates and compiles evidence regarding the quality and relevancy of the language model's answer.
 
-        llm_answer = res['content'] if isinstance(res, dict) else res.content
+        Parameters:
+            llm_answer (str): The generated answer to evaluate.
 
+        Returns:
+            dict: A dictionary containing the list of contexts used and their respective quality scores.
+        """
         # Calculate score
         before = datetime.now()
-        # faithfulness_score = self.calculate_faithfulness(llm_answer)
-        # answer_relevancy_score = self.calculate_answer_relevancy(llm_answer)
-        print(f"Eval answer time: {datetime.now() - before} seconds")
 
         context_list = [
-            {"context": ctx["text"], "metadata": ctx["metadata"]}
+            {
+                "context": ctx["text"],
+                "metadata": ctx["metadata"],
+                "is_internal": ctx["is_internal"],
+            }
             for ctx in self.contexts
         ]
-
-        # evidence = (
-        #    f"**Retrieved Contexts:**\n{context_str}\n\n"
-        #    f"**Faithfulness Score:** {faithfulness_score:.4f}\n"
-        #    f"**Answer Relevancy Score:** {answer_relevancy_score:.4f}"
-        # )
+        # Calculate score
+        score = self.calculate_score(llm_answer)
 
         evidence = {
             "context_list": context_list,
-            # "f_score": faithfulness_score,
-            # "ar_score": answer_relevancy_score,
+            "f_score": score['faithfulness'],
+            "ar_score": score['answer_relevancy'],
         }
 
-        return llm_answer, evidence
-
-    def calculate_faithfulness(self, generated_answer: str) -> float:
-        if not self.contexts:
-            raise ValueError(
-                "Contexts have not been retrieved. Ensure contexts are retrieved before this method is called."
-            )
-
-        model = self.model
-
-        # Prepare the dataset for evaluation
-        data_samples = {
-            'question': [self.query],
-            'answer': [generated_answer],
-            'contexts': [[val["text"] for val in self.contexts]],
-        }
-        dataset = Dataset.from_dict(data_samples)
-
-        # Evaluate faithfulness
-        score = evaluate(dataset, metrics=[faithfulness], llm=model)
-
-        # Convert score to pandas DataFrame and get the first score
-        score_df = score.to_pandas()
-        return score_df['faithfulness'].iloc[0]
-
-    def calculate_answer_relevancy(self, generated_answer: str) -> float:
-        if not self.contexts:
-            raise ValueError(
-                "Contexts have not been retrieved. Ensure contexts are retrieved before this method is called."
-            )
-
-        model = self.model
-
-        # Prepare the dataset for evaluation
-        data_samples = {
-            'question': [self.query],
-            'answer': [generated_answer],
-            'contexts': [[val["text"] for val in self.contexts]],
-        }
-        dataset = Dataset.from_dict(data_samples)
-
-        # Evaluate faithfulness
-        score = evaluate(dataset, metrics=[faithfulness], llm=model)
-
-        # Convert score to pandas DataFrame and get the first score
-        score_df = score.to_pandas()
-        return score_df['faithfulness'].iloc[0]
-
-
-# Example usage
-if __name__ == "__main__":
-    prompt = "What method do we use if we want to predict house price in an area?"
-    course = "cs229_stanford"
-
-    # Create an instance of GenerateRAGAnswer with the query and course
-    rag_generator = GenerateRAGAnswer(query=prompt, course=course)
-
-    # Generate and print the answer along with its embedded faithfulness score
-    answer = rag_generator.generate_answer()
-    print(answer)
+        print(f"Eval answer time: {datetime.now() - before} seconds")
+        return evidence

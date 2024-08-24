@@ -36,7 +36,9 @@ class VectorDBOperations:
         try:
             collection = self.client.get_collection(collection_name)
             results = collection.query(
-                query_embeddings=[query_embedding.tolist()], n_results=top_k
+                query_embeddings=[query_embedding.tolist()],
+                n_results=top_k,
+                include=['documents', 'embeddings', 'metadatas'],
             )
             print("Search successfully")
             return results
@@ -45,3 +47,10 @@ class VectorDBOperations:
 
     def get_collections(self):
         return [x.name for x in self.client.list_collections()]
+
+    def delete_collection(self, collection_name):
+        try:
+            self.client.delete_collection(collection_name)
+            print(f"Collection '{collection_name}' deleted successfully.")
+        except Exception as e:
+            print(f"Failed to delete collection: {str(e)}")

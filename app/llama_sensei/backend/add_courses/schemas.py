@@ -17,3 +17,4 @@ class SearchQuery(BaseModel):
 class SearchResponse(BaseModel):
     documents: List[str]
     metadatas: List[Dict]
+    embeddings: List[float]

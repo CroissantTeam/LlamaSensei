@@ -48,3 +48,8 @@ class DocumentProcessor:
         return self.vector_db.search_embeddings(
             self.collection_name, query_embedding, top_k
         )
+
+    def erase_all_data(self):
+        # erase collection and create new empty with the same name
+        self.vector_db.delete_collection(self.collection_name)
+        self.vector_db.create_collection(self.collection_name)
