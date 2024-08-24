@@ -1,6 +1,6 @@
 import pytest
 from typing import List
-from llama_sensei.backend.add_courses.embedding.preprocessing_text import TextPreprocessor
+from llama_sensei.backend.add_courses.vectordb.preprocessing_text import TextPreprocessor
 
 @pytest.fixture
 def preprocessor():

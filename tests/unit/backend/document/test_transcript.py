@@ -2,7 +2,7 @@ import os
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
 from datetime import datetime
-from llama_sensei.backend.add_courses.document.transcript import DeepgramSTTClient
+from llama_sensei.backend.add_courses.speech_to_text.transcript import DeepgramSTTClient
 
 @pytest.fixture
 def deepgram_client():
