@@ -35,9 +35,6 @@ jobs:
 
     - name: Run tests
       if: env.tests_exist == 'true'
-      env:
-        GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-        DG_API_KEY: ${{ secrets.DG_API_KEY }}
       run: |
         pytest
 
