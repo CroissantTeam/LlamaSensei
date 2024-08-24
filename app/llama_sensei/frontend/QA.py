@@ -47,10 +47,10 @@ def more_info(evidence: dict):
 
             # Display the faithfulness and answer relevancy scores for each context
             f_score = ctx['f_score']
-            ar_score = ctx['ar_score']
+            cr_score = ctx['cr_score']
 
-            st.markdown(f"**Faithfulness Score:** {f_score:.4f}\n")
-            st.markdown(f"**Answer Relevancy Score:** {ar_score:.4f}")
+            st.markdown(f"**Faithfulness Score:** {f_score * 100:.2f}%")
+            st.markdown(f"**Context Relevancy Score:** {cr_score * 100:.2f}%")
 
 
 # Display chat messages from history osn app rerun
