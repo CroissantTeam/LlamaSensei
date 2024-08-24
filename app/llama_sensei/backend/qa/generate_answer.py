@@ -44,7 +44,7 @@ class GenerateRAGAnswer:
         cal_evidence: Compiles evidence of the generated answer's quality and relevancy.
     """
 
-    def __init__(self, course: str, model=MODEL):
+    def __init__(self, course: str, model=MODEL, groq_api_key=None):
         """
         Initializes the GenerateRAGAnswer instance with specified course and model settings.
 
@@ -57,7 +57,10 @@ class GenerateRAGAnswer:
         self.embedder = SentenceTransformer(EMBEDDING_LLM, trust_remote_code=True).to(
             DEVICE
         )
-        self.model = ChatGroq(model=model, temperature=0)
+        self.groq_api_key = groq_api_key
+        self.model = ChatGroq(
+            model=model, temperature=0, groq_api_key=self.groq_api_key
+        )
         self.contexts = []  # To store the retrieved contexts
 
     def retrieve_contexts(self):

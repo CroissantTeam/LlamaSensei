@@ -7,18 +7,24 @@ from llama_sensei.backend.qa.generate_answer import (
     GenerateRAGAnswer
 )
 from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
+from langchain_groq import ChatGroq
+import json
+from groq.resources.chat.completions import Completions
 
 # Fixture to create a mocked instance of GenerateRAGAnswer
+
 @pytest.fixture
 
-def mock_generateanswer(mocker):
-    mocker.patch('sentence_transformers.SentenceTransformer')
-    mocker.patch('langchain_groq.ChatGroq')
-    return GenerateRAGAnswer(course="test_course", model="llama3-70b-8192")
-
 # Test for the retrieve_contexts method
-def test_retrieve_contexts(mock_generateanswer, mocker):
+def test_retrieve_contexts(mocker):
     # Mock DocumentProcessor and its search method correctly using mocker.patch
+    client = mocker.patch('langchain_groq.chat_models.ChatGroq', 
+                          return_value = ChatGroq(groq_api_key="valid_key", model="valid_model"))
+    
+    mock_generateanswer = GenerateRAGAnswer(course="test_course", 
+                                            model="valid_model", 
+                                            groq_api_key="valid_key")
+    
     mock_search = mocker.patch(
         'llama_sensei.backend.add_courses.vectordb.document_processor.DocumentProcessor.search',
         autospec=True
@@ -44,7 +50,11 @@ def test_retrieve_contexts(mock_generateanswer, mocker):
     assert results[1]['metadata'] == "Metadata 2"
 
 # Test for the external_search method
-def test_external_search(mock_generateanswer, mocker):
+def test_external_search(mocker):
+    mock_generateanswer = GenerateRAGAnswer(course="test_course", 
+                                            model="valid_model", 
+                                            groq_api_key="valid_key")
+    
     mock_search_api = mocker.patch('langchain_community.utilities.DuckDuckGoSearchAPIWrapper',
                                    return_value = [
         {'snippet': 'snippet1', 'link': 'link1'},
@@ -59,7 +69,10 @@ def test_external_search(mock_generateanswer, mocker):
     assert results[0]['snippet'] is not None
     assert results[0]['link'] is not None
     
-def test_calculate_context_relevancy_not_none(mock_generateanswer, mocker):
+def test_calculate_context_relevancy_not_none(mocker):
+    mock_generateanswer = GenerateRAGAnswer(course="test_course", 
+                                            model="valid_model", 
+                                            groq_api_key="valid_key")
     # Mock the embedder to return a non-trivial embedding for the query
     mocker.patch.object(mock_generateanswer.embedder, 'encode', return_value=np.array([0.5, 0.5]))
 
@@ -75,7 +88,10 @@ def test_calculate_context_relevancy_not_none(mock_generateanswer, mocker):
     # Assert that the function does not return None
     assert relevancy_score is not None
 
-def test_rank_and_select_top_contexts(mock_generateanswer, mocker):
+def test_rank_and_select_top_contexts(mocker):
+    mock_generateanswer = GenerateRAGAnswer(course="test_course", 
+                                            model="valid_model", 
+                                            groq_api_key="valid_key")
     # Mock the embedder to return a specific query embedding
     mocker.patch.object(mock_generateanswer.embedder, 'encode', return_value=np.array([0.5, 0.5]))
 
@@ -99,3 +115,46 @@ def test_rank_and_select_top_contexts(mock_generateanswer, mocker):
     # Optional: Validate the content of top_contexts if necessary
     assert top_contexts[0]['text'] == 'Context C'
     assert top_contexts[1]['text'] == 'Context B'
+    
+def test_generate_llm_answer(mocker):
+    
+    mock_generateanswer = GenerateRAGAnswer(course="test_course", 
+                                            model="valid_model", 
+                                            groq_api_key="valid_key")
+    
+    groq_chat_completion_response = (
+        {
+            "id": "chatcmpl-7qyuw6Q1CFCpcKsMdFkmUPUa7JP2x",
+            "object": "chat.completion",
+            "created": 1692338378,
+            "model": "",
+            "system_fingerprint": None,
+            "choices": [
+                {
+                    "index": 0,
+                    "finish_reason": "stop",
+                    "message": {
+                        "role": "assistant",
+                        "content": json.dumps(
+                            [
+                                {
+                                    "question": "What is the document about?",
+                                    "answer": "The document is about a sample topic.",
+                                }
+                            ],
+                        ),
+                    },
+                    "logprobs": None,
+                }
+            ],
+            "usage": {"completion_tokens": 9, "prompt_tokens": 10, "total_tokens": 19},
+        }
+    )
+    
+    groq_mocker = mocker.patch("langchain_groq.chat_models.ChatGroq.stream",
+        return_value = groq_chat_completion_response,
+        )
+    
+    result = mock_generateanswer.generate_llm_answer()
+    
+    assert result is not None
