@@ -1,6 +1,9 @@
 import pytest
 from unittest.mock import Mock, patch
 from llama_sensei.backend.add_courses.vectordb.document_processor import DocumentProcessor
+from llama_sensei.backend.add_courses.vectordb.vector_db_operations import VectorDBOperations
+
+vector_db = VectorDBOperations("data/")
 
 @pytest.fixture
 def mock_text_processor():
@@ -19,7 +22,7 @@ def document_processor(mock_text_processor, mock_vector_db, mock_embedder):
     with patch('llama_sensei.backend.add_courses.vectordb.document_processor.TextPreprocessor', return_value=mock_text_processor), \
          patch('llama_sensei.backend.add_courses.vectordb.document_processor.VectorDBOperations', return_value=mock_vector_db), \
          patch('llama_sensei.backend.add_courses.vectordb.document_processor.Embedder', return_value=mock_embedder):
-        return DocumentProcessor("test_collection", search_only=False)
+        return DocumentProcessor(vector_db, "test_collection", search_only=False)
 
 def test_init(document_processor, mock_vector_db):
     """
@@ -42,7 +45,7 @@ def test_init_search_only(mock_text_processor, mock_vector_db, mock_embedder):
     with patch('llama_sensei.backend.add_courses.vectordb.document_processor.TextPreprocessor', return_value=mock_text_processor), \
          patch('llama_sensei.backend.add_courses.vectordb.document_processor.VectorDBOperations', return_value=mock_vector_db), \
          patch('llama_sensei.backend.add_courses.vectordb.document_processor.Embedder', return_value=mock_embedder):
-        dp = DocumentProcessor("test_collection", search_only=True)
+        dp = DocumentProcessor(vector_db, "test_collection", search_only=True)
     mock_vector_db.create_collection.assert_not_called()
 
 def test_process_document(document_processor, mock_text_processor, mock_vector_db, mock_embedder):
