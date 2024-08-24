@@ -17,4 +17,11 @@ langchain-groq
 langchain-community
 duckduckgo-search
 # oauth2 for download youtube video on EC2 instance
+pytest-asyncio==0.24.0
+aiofiles==24.1.0
+deepgram-sdk==3.5.0
+python-dotenv==1.0.1
+ragas==0.1.14
+requests-oauthlib==2.0.0
+yt-dlp==2024.8.6
 yt-dlp-youtube-oauth2 @ https://github.com/coletdjnz/yt-dlp-youtube-oauth2/archive/refs/heads/master.zip

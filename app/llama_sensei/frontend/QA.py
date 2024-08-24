@@ -33,9 +33,15 @@ def more_info(evidence: dict):
                     f"**Context** ([source]({ctx['metadata']['link']})): {ctx['context']}\n"
                 )
             else:
+                link = f"https://www.youtube.com/watch?v={ctx['metadata']['video_id']}&t={ctx['metadata']['start']}s"
                 st.markdown(
-                    f"**Context** ([source](https://www.youtube.com/watch?v={ctx['metadata']['video_id']}&t={ctx['metadata']['start']}s)): {ctx['context']}\n"
+                    f"**Context** ([source]({link})): {ctx['context']}\n"
                 )
+                col1,col2=st.columns([3,3])
+                with col1:
+                    container = st.container(border=True)
+                    with container:
+                        st.video(data=link, start_time=ctx['metadata']['start'], end_time=ctx['metadata']['end'])
 
             # Display the faithfulness and answer relevancy scores for each context
             f_score = ctx['f_score']
