@@ -33,12 +33,24 @@ def more_info(evidence: dict):
                     f"**Context** ([source]({ctx['metadata']['link']})): {ctx['context']}\n"
                 )
             else:
-                st.markdown(
-                    f"**Context** ([source](https://www.youtube.com/watch?v={ctx['metadata']['video_id']}&t={ctx['metadata']['start']}s)): {ctx['context']}\n"
-                )
+                link = f"https://www.youtube.com/watch?v={ctx['metadata']['video_id']}&t={ctx['metadata']['start']}s"
+                st.markdown(f"**Context** ([source]({link})): {ctx['context']}\n")
+                col1, col2 = st.columns([3, 3])
+                with col1:
+                    container = st.container(border=True)
+                    with container:
+                        st.video(
+                            data=link,
+                            start_time=ctx['metadata']['start'],
+                            end_time=ctx['metadata']['end'],
+                        )
 
-    st.markdown(f"**Faithfulness Score:** {evidence['f_score']:.4f}\n")
-    st.markdown(f"**Answer Relevancy Score:** {evidence['ar_score']:.4f}")
+            # Display the faithfulness and answer relevancy scores for each context
+            f_score = ctx['f_score']
+            cr_score = ctx['cr_score']
+
+            st.markdown(f"**Faithfulness Score:** {f_score * 100:.2f}%")
+            st.markdown(f"**Context Relevancy Score:** {cr_score * 100:.2f}%")
 
 
 # Display chat messages from history osn app rerun
