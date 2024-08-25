@@ -8,7 +8,7 @@ from llama_sensei.backend.add_courses.vectordb.vector_db_operations import Vecto
 
 @pytest.fixture
 def vector_db():
-    return VectorDBOperations()
+    return VectorDBOperations("data/unittest")
 
 # @pytest.fixture
 # def document_processor():
