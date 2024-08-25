@@ -2,9 +2,14 @@ import pytest
 
 from llama_sensei.backend.add_courses.vectordb.get_embedding import Embedder
 from llama_sensei.backend.add_courses.vectordb.preprocessing_text import TextPreprocessor
+from llama_sensei.backend.add_courses.vectordb.vector_db_operations import VectorDBOperations
 
 text_processor = TextPreprocessor()
 embedder = Embedder()
+
+@pytest.fixture
+def vector_db():
+    return VectorDBOperations("data/unittest")
 
 def test_create_collection_success(vector_db):
     collection_name = "test_collection"
