@@ -1,3 +1,4 @@
+import os
 import time
 from datetime import datetime
 
@@ -17,6 +18,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 MODEL = "llama3-70b-8192"
 EMBEDDING_LLM = "all-MiniLM-L12-v2"
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+GROQ_API_KEY = os.environ["GROQ_API_KEY"]
 
 
 class GenerateRAGAnswer:
@@ -44,7 +46,7 @@ class GenerateRAGAnswer:
         cal_evidence: Compiles evidence of the generated answer's quality and relevancy.
     """
 
-    def __init__(self, course: str, model=MODEL, groq_api_key=None):
+    def __init__(self, course: str, model=MODEL, groq_api_key=GROQ_API_KEY):
         """
         Initializes the GenerateRAGAnswer instance with specified course and model settings.
 
@@ -57,10 +59,7 @@ class GenerateRAGAnswer:
         self.embedder = SentenceTransformer(EMBEDDING_LLM, trust_remote_code=True).to(
             DEVICE
         )
-        self.groq_api_key = groq_api_key
-        self.model = ChatGroq(
-            model=model, temperature=0, groq_api_key=self.groq_api_key
-        )
+        self.model = ChatGroq(model=model, temperature=0)
         self.contexts = []  # To store the retrieved contexts
 
     def retrieve_contexts(self):

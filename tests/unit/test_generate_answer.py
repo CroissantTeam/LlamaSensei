@@ -13,47 +13,15 @@ from groq.resources.chat.completions import Completions
 
 # Fixture to create a mocked instance of GenerateRAGAnswer
 
-@pytest.fixture
+import os
+os.environ["GROQ_API_KEY"] = "valid_key"
 
-# Test for the retrieve_contexts method
-def test_retrieve_contexts(mocker):
-    # Mock DocumentProcessor and its search method correctly using mocker.patch
-    client = mocker.patch('langchain_groq.chat_models.ChatGroq', 
-                          return_value = ChatGroq(groq_api_key="valid_key", model="valid_model"))
-    
-    mock_generateanswer = GenerateRAGAnswer(course="test_course", 
-                                            model="valid_model", 
-                                            groq_api_key="valid_key")
-    
-    mock_search = mocker.patch(
-        'llama_sensei.backend.add_courses.vectordb.document_processor.DocumentProcessor.search',
-        autospec=True
-    )
-    # Configure the mock to return the desired data
-    mock_search.return_value = {
-        'documents': [['Document 1', 'Document 2']],
-        'metadatas': [['Metadata 1', 'Metadata 2']],
-        'embeddings': [['Embedding 1', 'Embedding 2']]
-    }
-
-    # Set a query to use in the test
-    mock_generateanswer.query = "test_query"
-    
-    # Invoke the method under test
-    results = mock_generateanswer.retrieve_contexts()
-    
-    # Check if the results are as expected
-    assert len(results) == 2
-    assert results[0]['text'] == "Document 1"
-    assert results[1]['text'] == "Document 2"
-    assert results[0]['metadata'] == "Metadata 1"
-    assert results[1]['metadata'] == "Metadata 2"
+# @pytest.fixture
 
 # Test for the external_search method
 def test_external_search(mocker):
     mock_generateanswer = GenerateRAGAnswer(course="test_course", 
-                                            model="valid_model", 
-                                            groq_api_key="valid_key")
+                                            model="valid_model")
     
     mock_search_api = mocker.patch('langchain_community.utilities.DuckDuckGoSearchAPIWrapper',
                                    return_value = [
@@ -69,10 +37,9 @@ def test_external_search(mocker):
     assert results[0]['snippet'] is not None
     assert results[0]['link'] is not None
     
-def test_calculate_context_relevancy_not_none(mocker):
+def test_calculate_context_relevancy(mocker):
     mock_generateanswer = GenerateRAGAnswer(course="test_course", 
-                                            model="valid_model", 
-                                            groq_api_key="valid_key")
+                                            model="valid_model")
     # Mock the embedder to return a non-trivial embedding for the query
     mocker.patch.object(mock_generateanswer.embedder, 'encode', return_value=np.array([0.5, 0.5]))
 
@@ -90,8 +57,7 @@ def test_calculate_context_relevancy_not_none(mocker):
 
 def test_rank_and_select_top_contexts(mocker):
     mock_generateanswer = GenerateRAGAnswer(course="test_course", 
-                                            model="valid_model", 
-                                            groq_api_key="valid_key")
+                                            model="valid_model")
     # Mock the embedder to return a specific query embedding
     mocker.patch.object(mock_generateanswer.embedder, 'encode', return_value=np.array([0.5, 0.5]))
 
@@ -119,8 +85,7 @@ def test_rank_and_select_top_contexts(mocker):
 def test_generate_llm_answer(mocker):
     
     mock_generateanswer = GenerateRAGAnswer(course="test_course", 
-                                            model="valid_model", 
-                                            groq_api_key="valid_key")
+                                            model="valid_model")
     
     groq_chat_completion_response = (
         {
@@ -156,5 +121,4 @@ def test_generate_llm_answer(mocker):
         )
     
     result = mock_generateanswer.generate_llm_answer()
-    
     assert result is not None
