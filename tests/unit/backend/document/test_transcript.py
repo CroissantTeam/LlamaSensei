@@ -44,10 +44,10 @@ async def test_transcribe_success(deepgram_client):
     mock_file = AsyncMock()
     mock_file.__aenter__.return_value.read = AsyncMock(return_value=b"mock audio data")
 
-    with patch('llama_sensei.backend.add_courses.document.transcript.DeepgramClient', return_value=mock_deepgram_client), \
+    with patch('llama_sensei.backend.add_courses.speech_to_text.transcript.DeepgramClient', return_value=mock_deepgram_client), \
          patch('aiofiles.open', return_value=mock_file), \
          patch('builtins.open', MagicMock()), \
-         patch('llama_sensei.backend.add_courses.document.transcript.datetime', mock_datetime), \
+         patch('llama_sensei.backend.add_courses.speech_to_text.transcript.datetime', mock_datetime), \
          patch('builtins.print') as mock_print:
 
         await deepgram_client.transcribe("test.wav", "test.json")
@@ -68,7 +68,7 @@ async def test_transcribe_success(deepgram_client):
 
 @pytest.mark.asyncio
 async def test_transcribe_exception(deepgram_client):
-    with patch('llama_sensei.backend.add_courses.document.transcript.DeepgramClient', side_effect=Exception("Test error")), \
+    with patch('llama_sensei.backend.add_courses.speech_to_text.transcript.DeepgramClient', side_effect=Exception("Test error")), \
          patch('builtins.print') as mock_print:
         
         await deepgram_client.transcribe("test.wav", "test.json")
