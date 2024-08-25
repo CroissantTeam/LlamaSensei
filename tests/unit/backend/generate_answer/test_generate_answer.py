@@ -1,23 +1,19 @@
-import pytest
 import numpy as np
-from llama_sensei.backend.add_courses.vectordb.document_processor import (
-    DocumentProcessor,
-)
 from llama_sensei.backend.qa.generate_answer import (
     GenerateRAGAnswer
 )
-from langchain_community.utilities import DuckDuckGoSearchAPIWrapper
-from langchain_groq import ChatGroq
 import json
-from groq.resources.chat.completions import Completions
 
 # Fixture to create a mocked instance of GenerateRAGAnswer
+
+import os
+os.environ["GROQ_API_KEY"] = "valid_key"
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
 # Test for the external_search method
 def test_external_search(mocker):
     mock_generateanswer = GenerateRAGAnswer(course="test_course", 
-                                            model="valid_model", 
-                                            groq_api_key="valid_key",
+                                            model="valid_model",
                                             context_search_url="http://url")
     
     mock_search_api = mocker.patch('langchain_community.utilities.DuckDuckGoSearchAPIWrapper',
@@ -34,10 +30,9 @@ def test_external_search(mocker):
     assert results[0]['snippet'] is not None
     assert results[0]['link'] is not None
     
-def test_calculate_context_relevancy_not_none(mocker):
+def test_calculate_context_relevancy(mocker):
     mock_generateanswer = GenerateRAGAnswer(course="test_course", 
-                                            model="valid_model", 
-                                            groq_api_key="valid_key",
+                                            model="valid_model",
                                             context_search_url="http://url")
     # Mock the embedder to return a non-trivial embedding for the query
     mocker.patch.object(mock_generateanswer.embedder, 'encode', return_value=np.array([0.5, 0.5]))
@@ -56,8 +51,7 @@ def test_calculate_context_relevancy_not_none(mocker):
 
 def test_rank_and_select_top_contexts(mocker):
     mock_generateanswer = GenerateRAGAnswer(course="test_course", 
-                                            model="valid_model", 
-                                            groq_api_key="valid_key",
+                                            model="valid_model",
                                             context_search_url="http://url")
     # Mock the embedder to return a specific query embedding
     mocker.patch.object(mock_generateanswer.embedder, 'encode', return_value=np.array([0.5, 0.5]))
@@ -86,8 +80,7 @@ def test_rank_and_select_top_contexts(mocker):
 def test_generate_llm_answer(mocker):
     
     mock_generateanswer = GenerateRAGAnswer(course="test_course", 
-                                            model="valid_model", 
-                                            groq_api_key="valid_key",
+                                            model="valid_model",
                                             context_search_url="http://url")
     
     groq_chat_completion_response = (
@@ -124,5 +117,4 @@ def test_generate_llm_answer(mocker):
         )
     
     result = mock_generateanswer.generate_llm_answer()
-    
     assert result is not None

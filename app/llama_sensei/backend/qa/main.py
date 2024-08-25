@@ -9,7 +9,6 @@ from schemas import ChatResponse, EvaluationRequest, EvaluationResponse, Questio
 
 load_dotenv()
 CONTEXT_SEARCH_API_URL = f'{os.getenv("COURSE_API_URL")}/search'
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 app = FastAPI(title="LlamaSensei: Chat API")
 
 
@@ -18,7 +17,6 @@ async def api_generate_answer(question: Question):
     rag_chain = GenerateRAGAnswer(
         course=question.course,
         context_search_url=CONTEXT_SEARCH_API_URL,
-        groq_api_key=GROQ_API_KEY,
     )
     rag_chain.prepare_context(
         indb=question.indb,
@@ -33,7 +31,6 @@ def evaluate_answer(request: EvaluationRequest):
     rag_chain = GenerateRAGAnswer(
         course=request.course_name,
         context_search_url=CONTEXT_SEARCH_API_URL,
-        groq_api_key=GROQ_API_KEY,
     )
     evidence = rag_chain.run_evaluation(
         query=request.query,
