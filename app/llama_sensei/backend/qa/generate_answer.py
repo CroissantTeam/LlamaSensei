@@ -152,15 +152,7 @@ class GenerateRAGAnswer:
 
             similarity_scores.append(similarity.item())
 
-        print("s_score:", similarity_scores)
-
         return similarity_scores
-
-        # # Calculate and return the mean of the similarity scores
-        # if similarity_scores:
-        #     return np.mean(similarity_scores)
-        # else:
-        #     return 0.0
 
     def calculate_score(self, generated_answer: str) -> float:
         """
@@ -198,12 +190,9 @@ class GenerateRAGAnswer:
 
         # Convert score to pandas DataFrame and get the mean score
         score_df = score.to_pandas()
-        # print(score_df)
         f_score = score_df['faithfulness'].tolist()
 
-        # print("f_Score", f_score)
-
-        result = {'faithfulness': f_score, 'answer_relevancy': relevancy_score}
+        result = {'faithfulness': f_score, 'context_relevancy': relevancy_score}
 
         return result
 
@@ -306,7 +295,7 @@ class GenerateRAGAnswer:
                 "metadata": ctx["metadata"],
                 "is_internal": ctx["is_internal"],
                 "f_score": scores['faithfulness'][0],
-                "ar_score": scores['answer_relevancy'][i],
+                "cr_score": scores['context_relevancy'][i],
             }
             for i, ctx in enumerate(self.contexts)
         ]
@@ -314,8 +303,8 @@ class GenerateRAGAnswer:
         evidence = {
             "context_list": evidence_list,
             "f_score": scores['faithfulness'],
-            "ar_score": sum(scores['answer_relevancy'])
-            / len(scores['answer_relevancy']),
+            "cr_score": sum(scores['context_relevancy'])
+            / len(scores['context_relevancy']),
         }
 
         print(f"Eval answer time: {datetime.now() - before} seconds")
