@@ -15,8 +15,7 @@ from groq.resources.chat.completions import Completions
 
 import os
 os.environ["GROQ_API_KEY"] = "valid_key"
-
-# @pytest.fixture
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
 # Test for the external_search method
 def test_external_search(mocker):
