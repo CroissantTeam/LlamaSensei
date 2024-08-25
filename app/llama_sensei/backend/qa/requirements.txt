@@ -1,0 +1,10 @@
+fastapi[standard]
+python-dotenv
+requests
+datasets
+ragas
+scikit-learn
+duckduckgo-search
+langchain-groq==0.1.9
+sentence-transformers==3.0.1
+torch==2.3.1

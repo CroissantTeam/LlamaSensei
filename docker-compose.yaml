@@ -1,0 +1,58 @@
+services:
+
+  frontend_streamlit:
+    container_name: frontend_streamlit
+    build: ./app/llama_sensei/frontend
+    ports:
+      - ${FRONTEND_PORT}:${FRONTEND_PORT}
+    environment:
+      - COURSE_API_URL=http://course_management_api:${COURSE_FASTAPI_PORT}
+      - CHAT_API_URL=http://chat_api:${CHAT_FASTAPI_PORT}
+    command: ["streamlit", "run", "QA.py", "--server.port", "${FRONTEND_PORT}"]
+    depends_on:
+      - "course_management_api"
+      - "chat_api"
+    volumes:
+      - ./app/llama_sensei/frontend:/app
+
+
+  chat_api:
+    container_name: chat_api
+    build: ./app/llama_sensei/backend/qa
+    env_file:
+      - .env
+    ports:
+      - ${CHAT_FASTAPI_PORT}:${CHAT_FASTAPI_PORT}
+    environment:
+      - COURSE_API_URL=http://course_management_api:${COURSE_FASTAPI_PORT}
+    depends_on:
+      - "course_management_api"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+
+  course_management_api:
+    container_name: course_management_api
+    build: ./app/llama_sensei/backend/add_courses
+    env_file:
+      - .env
+    ports:
+      - ${COURSE_FASTAPI_PORT}:${COURSE_FASTAPI_PORT}
+    volumes:
+      - ./data:/data
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+networks:
+  default:
+    name: llama-sensei

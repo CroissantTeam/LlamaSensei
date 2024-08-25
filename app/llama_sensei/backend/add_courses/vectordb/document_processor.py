@@ -1,13 +1,15 @@
-from ..embedding.get_embedding import Embedder
-from ..embedding.load_text import TranscriptLoader
-from ..embedding.preprocessing_text import TextPreprocessor
+from .get_embedding import Embedder
+from .load_text import TranscriptLoader
+from .preprocessing_text import TextPreprocessor
 from .vector_db_operations import VectorDBOperations
 
 
 class DocumentProcessor:
-    def __init__(self, collection_name, search_only: bool):
+    def __init__(
+        self, vector_db: VectorDBOperations, collection_name: str, search_only: bool
+    ):
         self.text_processor = TextPreprocessor()
-        self.vector_db = VectorDBOperations()
+        self.vector_db = vector_db
         self.embedder = Embedder()
         if search_only is False:
             self.vector_db.create_collection(collection_name)

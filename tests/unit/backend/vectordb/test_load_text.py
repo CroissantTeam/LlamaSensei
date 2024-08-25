@@ -2,7 +2,7 @@ import pytest
 import json
 import tempfile
 import os
-from llama_sensei.backend.add_courses.embedding.load_text import TranscriptLoader
+from llama_sensei.backend.add_courses.vectordb.load_text import TranscriptLoader
 
 @pytest.fixture
 def sample_data():

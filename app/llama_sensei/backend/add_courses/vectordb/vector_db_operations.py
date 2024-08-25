@@ -1,9 +1,13 @@
+import os
+
 import chromadb
 
 
 class VectorDBOperations:
-    def __init__(self):
-        self.client = chromadb.PersistentClient(path="data/chroma_db")
+    def __init__(self, save_path):
+        self.client = chromadb.PersistentClient(
+            path=os.path.join(save_path, "chroma_db")
+        )
 
     def create_collection(self, collection_name):
         try:
@@ -40,6 +44,9 @@ class VectorDBOperations:
             return results
         except Exception as e:
             print(f"Search failed: {str(e)}")
+
+    def get_collections(self):
+        return [x.name for x in self.client.list_collections()]
 
     def delete_collection(self, collection_name):
         try:

@@ -3,7 +3,7 @@ import numpy as np
 from typing import List
 import torch
 from sentence_transformers import SentenceTransformer
-from llama_sensei.backend.add_courses.embedding.get_embedding import Embedder
+from llama_sensei.backend.add_courses.vectordb.get_embedding import Embedder
 
 @pytest.fixture
 def embedder():

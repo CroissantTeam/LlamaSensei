@@ -1,20 +1,8 @@
-import asyncio
-import glob
-import os
-import shutil
-
-import chromadb
 import streamlit as st
-from llama_sensei.backend.add_courses.document.transcript import DeepgramSTTClient
-from llama_sensei.backend.add_courses.vectordb.document_processor import (
-    DocumentProcessor,
-)
-from llama_sensei.backend.add_courses.yt_api.audio import YouTubeAudioDownloader
-from llama_sensei.backend.add_courses.yt_api.playlist import PlaylistVideosFetcher
+from utils.client import add_course, get_courses
 
 if 'list_name' not in st.session_state:
-    client = chromadb.PersistentClient(path="data/chroma_db")
-    st.session_state.list_name = [x.name for x in client.list_collections()]
+    st.session_state.list_name = get_courses()
 
 st.write("# This is for uploading courses")
 
@@ -48,38 +36,12 @@ url = st.text_input(
 
 def upload():
     try:
-        fetcher = PlaylistVideosFetcher()
-        video_urls = fetcher.get_playlist_videos(url)
-        print(video_urls)
-
-        downloader = YouTubeAudioDownloader("data/", course_name=course_name)
-        downloader.download_audio(video_urls)
-        print('Download success')
-
-        audio_list = glob.glob(os.path.join("data", course_name, "audio/*.wav"))
-        deepgram_client = DeepgramSTTClient(
-            os.path.join("data/transcript", course_name)
-        )
-        asyncio.run(deepgram_client.get_transcripts(audio_list))
-        print("transcript success")
-
-        proc = DocumentProcessor(course_name, search_only=False)
-        if erase_db:
-            proc.erase_all_data()
-        folder_path = f"data/transcript/{course_name}/"
-        for video_id in os.listdir(folder_path):
-            proc.process_document(
-                path=os.path.join(folder_path, video_id),
-                metadata={'video_id': video_id.split('.')[0]},
-            )
+        response = add_course(url, course_name)
+        if "Success" in response["message"]:
+            st.success("Completed upload")
     except Exception as e:
         st.error(f"An error occurred while uploading: {str(e)}")
         st.rerun()
-    st.success("Completed upload")
-
-    # Clean up
-    shutil.rmtree(os.path.join("data", course_name))
-    shutil.rmtree(os.path.join("data/transcript", course_name))
 
 
 st.button("Upload", on_click=upload)
