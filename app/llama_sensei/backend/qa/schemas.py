@@ -23,5 +23,5 @@ class EvaluationRequest(BaseModel):
 
 
 class EvaluationResponse(BaseModel):
-    f_score: str
-    ar_score: str
+    f_scores: List[str]
+    cr_scores: List[str]

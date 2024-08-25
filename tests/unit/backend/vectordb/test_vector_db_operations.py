@@ -78,9 +78,3 @@ def test_add_multiple_embeddings(vector_db):
     query = embedder.embed("document")
     results = vector_db.search_embeddings(collection_name, query, top_k=3)
     assert len(results['ids'][0]) == 3
-
-
-# @pytest.mark.parametrize("invalid_name", ["", " ", "invalid/name"])
-# def test_invalid_collection_name(vector_db, invalid_name):
-#     with pytest.raises(ValueError):  # Change to ValueError based on the custom exception we raise
-#         vector_db.create_collection(invalid_name)

@@ -16,37 +16,45 @@ if "contexts" not in st.session_state:
 
 
 # display more info about response
-def more_info(evidence: list):
-    if not evidence:
-        st.markdown("**No evidence found**")
-        return
-    tabs = st.tabs([str(i + 1) for i in range(len(evidence))])
-    for i, ctx in enumerate(evidence):
-        with tabs[i]:
-            if 'link' in ctx['metadata']:
-                st.markdown(
-                    f"**Context** ([source]({ctx['metadata']['link']})): {ctx['text']}\n"
-                )
-            else:
-                st.markdown(
-                    f"**Context** ([source](https://www.youtube.com/watch?v={ctx['metadata']['video_id']}&t={ctx['metadata']['start']}s)): {ctx['text']}\n"
+def show_evidence(ctx: list):
+    if 'link' in ctx['metadata']:
+        st.markdown(
+            f"**Context** ([source]({ctx['metadata']['link']})): {ctx['text']}\n"
+        )
+    else:
+        link = f"https://www.youtube.com/watch?v={ctx['metadata']['video_id']}&t={ctx['metadata']['start']}s"
+        st.markdown(f"**Context** ([source]({link})): {ctx['text']}\n")
+        col1, col2 = st.columns([3, 3])
+        with col1:
+            container = st.container(border=True)
+            with container:
+                st.video(
+                    data=link,
+                    start_time=ctx['metadata']['start'],
+                    end_time=ctx['metadata']['end'],
                 )
 
 
-def show_score(scores: dict):
-    st.markdown(f"**Faithfulness Score:** {scores['f_score']}\n")
-    st.markdown(f"**Answer Relevancy Score:** {scores['ar_score']}")
+def show_score(f_score, cr_score):
+    st.markdown(f"**Faithfulness Score:** {f_score}%\n")
+    st.markdown(f"**Context Relevancy Score:** {cr_score}%")
 
 
 # Display chat messages from history osn app rerun
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
-        if "evidence" in message:
+        if "evidence" in message and "score" in message:
+            evidence, scores = message["evidence"], message["score"]
             with st.expander("More information"):
-                more_info(message["evidence"])
-        if "score" in message:
-            show_score(message["score"])
+                if not evidence:
+                    st.markdown("**No evidence found**")
+                    st.stop()
+                tabs = st.tabs([str(i + 1) for i in range(len(evidence))])
+                for i, ctx in enumerate(evidence):
+                    with tabs[i]:
+                        show_evidence(ctx)
+                        show_score(scores["f_scores"][i], scores["cr_scores"][i])
 
 
 with st.sidebar:
@@ -72,15 +80,24 @@ if prompt := st.chat_input("What is up?"):
             )
             evidence = st.session_state.contexts
             with st.expander("More information"):
-                more_info(evidence)
+                if not evidence:
+                    st.markdown("**No evidence found**")
+                    st.stop()
+                tabs = st.tabs([str(i + 1) for i in range(len(evidence))])
+                for i, ctx in enumerate(evidence):
+                    with tabs[i]:
+                        show_evidence(ctx)
 
-            scores = evaluate_evidence(
-                query=prompt,
-                answer=answer,
-                contexts=st.session_state.contexts,
-                course=course_name,
-            )
-            show_score(scores)
+                scores = evaluate_evidence(
+                    query=prompt,
+                    answer=answer,
+                    contexts=st.session_state.contexts,
+                    course=course_name,
+                )
+                for i, ctx in enumerate(evidence):
+                    with tabs[i]:
+                        # Display the faithfulness and answer relevancy scores for each context
+                        show_score(scores["f_scores"][i], scores["cr_scores"][i])
 
             # Add assistant response to chat history
             st.session_state.messages.append(

@@ -12,6 +12,8 @@ services:
     depends_on:
       - "course_management_api"
       - "chat_api"
+    volumes:
+      - ./app/llama_sensei/frontend:/app
 
 
   chat_api:
@@ -25,6 +27,15 @@ services:
       - COURSE_API_URL=http://course_management_api:${COURSE_FASTAPI_PORT}
     depends_on:
       - "course_management_api"
+    volumes:
+      - ./app/llama_sensei/backend/qa:/app
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
 
   course_management_api:
@@ -36,7 +47,13 @@ services:
       - ${COURSE_FASTAPI_PORT}:${COURSE_FASTAPI_PORT}
     volumes:
       - ./data:/data
-
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
 
 networks:
   default:
