@@ -42,7 +42,7 @@ Chat interface  |  Add new course interface
 - **Youtube lecture video crawling**: download youtube video playlist that contain lecture videos using [yt-dlp](https://github.com/yt-dlp/yt-dlp).
 - **Speech-to-Text**: transcribe lecture videos into transcripts with specific timestamp using [Deepgram API](https://deepgram.com/).
 - **Text Processing**: preprocess and handle text data using [NLTK](https://www.nltk.org/api/nltk.html).
-- **Text Embedding**: embed text data using [sentence_transformers]([https://www.nltk.org/api/nltk.html](https://huggingface.co/sentence-transformers).
+- **Text Embedding**: embed text data using [sentence_transformers](https://huggingface.co/sentence-transformers).
 - **Vector Database**: store and retrieve encoded lecture transcripts for RAG using [ChromaDB](https://docs.llamaindex.ai/en/stable/getting_started/starter_example/).
 - **Internet context search**: retrieve the external context from internet for RAG using [Duckduckgo](https://duckduckgo.com/).
 - **LLM API**: use [Groq](https://groq.com/) for fast LLM inference with various models (such as Llama, Mistral, etc.) and real-time answer streaming.
