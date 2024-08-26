@@ -62,7 +62,7 @@ Chat interface  |  Add new course interface
 
 ## Installation
 
-To run the application locally, follow these steps:
+This project supports deployment using `docker compose`. To run the application locally, follow these steps:
 
 1. **Clone the repository**:
    ```bash
@@ -70,39 +70,45 @@ To run the application locally, follow these steps:
    cd llama-sensei
    ```
 
-2. **Create and activate a virtual environment**:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
-   ```
+2. Get the API keys and fill the environment variables in `.env.example` file and **rename the file to `.env`**:
+   - DG_API_KEY: get from https://deepgram.com/
+   - GROQ_API_KEY: get from https://groq.com/
 
-3. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
 
-4. **Set up environment variables**:
-   - Create a `.env` file in the root directory and add necessary environment variables (e.g., API keys for Deepgram).
+3. Start the application by running the following command::
+  ```bash
+  docker-compose up -d
+  ```
 
-5. **Run the application**:
+4. When the service `course_management_api` is building, the yt-dlp will ask you to give authorization with this notification:
+  ```
+  [youtube+oauth2] To give yt-dlp access to your account, go to https://www.google.com/device and enter code XXX-YYY-ZZZ
+  ```
+  Follow the provided link and enter the code, this will give yt-dlp allowance to download youtube lecture videos.
+  
+5. Go to `localhost:8081` and enjoy!
+
+6. (Optional - for demo purpose) Download the [processed course transcript (stanford cs229) here](https://drive.google.com/drive/folders/1uDL-VKjL2OJMxMTq-ptheb7c49aAhS6o?usp=sharing) and add the course to database by running (remember to change the path to the transcript inside the python script file first):
    ```bash
-   streamlit run app/llama_sensei/frontend/Chat_Interface.py
-   ```
+  python scripts/create_collection.py
+  ```
 
 ## Usage
 
 ### Adding a Course
 
 1. Navigate to the "Add Course" page in the application.
-2. Upload course materials or provide links to the resources.
-3. The application will preprocess and index the course content for future queries.
+2. Upload course materials by providing URL to the resources.
+3. Check your content before add to database and press Submit.
+4. The application will process and store the course content for future queries.
 
 ### Asking Questions
 
 1. Go to the "QA" section.
 2. Select a course from the database.
-3. Enter your question and submit.
-4. View the AI-generated answer along with references from the knowledge base.
+3. Select retrieve context from either internal database (added lectures) or from internet, or from both.
+4. Enter your question and submit.
+5. View the AI-generated answer along with references from the knowledge base or external resources.
 
 ## API Endpoints
 
