@@ -1,7 +1,3 @@
-Here's a draft for your README.md that covers various sections, including an introduction, features, installation, usage, project structure, and contributions.
-
----
-
 # Llama Sensei: An AI-Powered Learning Assistant
 
 **Llama Sensei** is a web application designed to enhance the learning experience by providing instantaneous answers to users' questions about their courses. It leverages Large Language Models (LLM) and Retrieval-Augmented Generation (RAG) to ensure accurate and relevant information is delivered. Additionally, it provides precise links to the knowledge base that RAG uses, enhancing transparency and trust in the provided answers.
