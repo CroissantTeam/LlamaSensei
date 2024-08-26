@@ -6,8 +6,8 @@ script_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__f
 assets_dir = os.path.join(script_dir, 'assets/')
 
 st.set_page_config(
-    page_title="Hello world",              # Title of the web page
-    page_icon="chart_with_upwards_trend",  # Icon to display in the browser tab
+    page_title="Llama Sensei",              # Title of the web page
+    page_icon=":llama:",  # Icon to display in the browser tab
     layout="wide"                          # Use wide layout
 )
 

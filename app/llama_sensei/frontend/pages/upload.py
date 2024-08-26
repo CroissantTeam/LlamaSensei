@@ -72,7 +72,8 @@ def choose_course_ui():
 
             if st.button("Erase all data currently in course database", key="remove_all"):
                 st.toast("✅ All data has been erased ✅")  # Show toast notification
-                st.session_state.erase_db = True
+                proc = DocumentProcessor(st.session_state.course_name, search_only=True)
+                proc.erase_all_data()
 
     with col2:
         with st.form(key='upload_form'):
@@ -87,6 +88,19 @@ def choose_course_ui():
                 else:
                     st.toast("⚠️ YouTube URL cannot be empty. ⚠️")
 
+    st.write("Videos currently in course's database:")
+
+    import chromadb
+    client = chromadb.PersistentClient(path="data/chroma_db")
+    col = client.get_collection(st.session_state.course_name)
+    print(col.count())
+    if col.count():
+        yad = YouTubeAudioDownloader("data/", course_name=st.session_state.course_name)
+        video_set = list({f"https://www.youtube.com/watch?v={x['video_id']}" for x in col.get()['metadatas']})
+        table = {'Title': [yad.extract_title(x) for x in video_set], 
+                 'URL': video_set}
+        st.dataframe(data=table, use_container_width=True, hide_index=True)
+
 def upload_course_data(course_name, url, erase_db=False):
     """Handle the upload process for the selected course."""
     try:
@@ -94,17 +108,15 @@ def upload_course_data(course_name, url, erase_db=False):
         video_urls = fetcher.get_playlist_videos(url)
 
         downloader = YouTubeAudioDownloader("data/", course_name=course_name)
-        downloader.download_audio(video_urls)
+        titles, ids = downloader.download_audio(video_urls)
 
         audio_list = glob.glob(os.path.join("data", course_name, "audio/*.wav"))
         deepgram_client = DeepgramSTTClient(
             os.path.join("data/transcript", course_name)
         )
-        asyncio.run(deepgram_client.get_transcripts(audio_list))
+        deepgram_client.get_transcripts(audio_list)
 
         proc = DocumentProcessor(course_name, search_only=False)
-        if erase_db:
-            proc.erase_all_data()
         folder_path = f"data/transcript/{course_name}/"
         for video_id in os.listdir(folder_path):
             proc.process_document(
@@ -113,6 +125,7 @@ def upload_course_data(course_name, url, erase_db=False):
             )
     except Exception as e:
         st.toast(f"⚠️ An error occurred while uploading: {str(e)} ⚠️")
+        print(str(e))
         st.rerun()
     st.toast("✅ Upload completed successfully! ✅")
 

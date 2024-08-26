@@ -88,11 +88,14 @@ class GenerateRAGAnswer:
         Returns:
             str: A formatted string that serves as a prompt for the language model.
         """
-        # Extract the 'text' field from each context dictionary
-        context_texts = [f"{ctx['text']}" for ctx in self.contexts]
 
-        # Join the extracted text with double newlines
-        context = "\n\n".join(context_texts)
+        if not self.contexts:
+            context = ""
+        else:
+            # Extract the 'text' field from each context dictionary
+            context_texts = [f"{ctx['text']}" for ctx in self.contexts]
+            # Join the extracted text with double newlines
+            context = "\n\n".join(context_texts)
 
         prompt_template = (
             """
@@ -204,6 +207,10 @@ class GenerateRAGAnswer:
             list: The top contexts selected based on their overall relevance.
         """
 
+        if not self.contexts:
+            print("No contexts available to rank.")
+            return
+
         # Embed the query and reshape it to 2D array
         embedded_query = self.embedder.encode(self.query).reshape(1, -1)
 
@@ -211,6 +218,7 @@ class GenerateRAGAnswer:
         all_embeddings = [
             np.array(context['embedding']).reshape(1, -1) for context in self.contexts
         ]
+
         all_embeddings = np.vstack(
             all_embeddings
         )  # Stack to create a 2D array of all embeddings
@@ -238,6 +246,7 @@ class GenerateRAGAnswer:
         self.query = query
         self.contexts = []
         before = datetime.now()
+
         if internet:
             search_results = self.external_search()
             # Populate self.contexts with 'text' and 'embedding'
@@ -281,6 +290,11 @@ class GenerateRAGAnswer:
         Returns:
             dict: A dictionary containing the list of contexts used and their respective quality scores.
         """
+
+        if not self.contexts:
+            print("No contexts available to evaluate.")
+            return
+
         # Calculate score
         before = datetime.now()
 

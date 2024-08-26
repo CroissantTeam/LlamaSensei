@@ -32,6 +32,8 @@ class YouTubeAudioDownloader:
         try:
             with yt_dlp.YoutubeDL(self.ydl_opts) as ydl:
                 video_info_list = []
+                titles = []
+                ids = []
                 for url in urls:
                     info = ydl.extract_info(url, download=False)
                     video_info = {
@@ -44,6 +46,8 @@ class YouTubeAudioDownloader:
                         'duration': info.get('duration', 'Unknown'),
                     }
                     video_info_list.append(video_info)
+                    titles.append(info.get('title', 'No title'))
+                    ids.append(info.get('id', 'No id'))
 
                 save_metadata_file = os.path.join(
                     self.output_course_path, METADATA_FILENAME
@@ -54,7 +58,12 @@ class YouTubeAudioDownloader:
                 # Download playlist videos
                 ydl.download(urls)
 
-            return urls
+            return titles, ids
 
         except Exception as e:
             print(f"An error occurred: {str(e)}")
+
+    def extract_title(self, url):
+        with yt_dlp.YoutubeDL(self.ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+            return info.get('title', 'No title')

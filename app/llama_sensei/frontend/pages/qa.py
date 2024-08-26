@@ -19,6 +19,35 @@ def show(on_internet_checkbox_change=None):
         st.session_state.messages = []
     if "rag_generator" not in st.session_state:
         st.session_state.rag_generator = GenerateRAGAnswer(course=course_name)
+    st.session_state.rag_generator.course = course_name
+
+    with st.sidebar:
+        indb = st.checkbox("Course's record", value=True)
+        internet = st.checkbox("Internet", value=False)
+        on_internet_checkbox_change(internet)
+
+    # More info function (unchanged)
+    def more_info(evidence: dict):
+        if not evidence:
+            st.markdown("**No evidence found**")
+            return
+        tabs = st.tabs([str(i + 1) for i in range(len(evidence["context_list"]))])
+        for i, ctx in enumerate(evidence["context_list"]):
+            with tabs[i]:
+                link = ""
+                if 'video_id' in ctx['metadata']:
+                    link = f"https://www.youtube.com/watch?v={ctx['metadata']['video_id']}&t={ctx['metadata']['start']}s"
+                else:
+                    link = ctx['metadata']['link']
+                st.markdown(f"**Context** ([source]({link})): {ctx['context']}\n")
+                if 'video_id' in ctx['metadata']:
+                    col1, col2 = st.columns([3, 3])
+                    with col1:
+                        st.video(data=link, start_time=ctx['metadata']['start'], end_time=ctx['metadata']['end'])
+                f_score = ctx['f_score']
+                cr_score = ctx['cr_score']
+                st.markdown(f"**Faithfulness Score:** {f_score * 100:.2f}%")
+                st.markdown(f"**Context Relevancy Score:** {cr_score * 100:.2f}%")
 
     # Display chat messages from history
     for message in st.session_state.messages:
@@ -39,7 +68,7 @@ def show(on_internet_checkbox_change=None):
         # Generate and display assistant response
         with st.chat_message("assistant"):
             rag_generator = st.session_state.rag_generator
-            rag_generator.prepare_context(indb=True, internet=True, query=prompt)
+            rag_generator.prepare_context(indb, internet, query=prompt)
             
             message_placeholder = st.empty()
             full_response = ""
@@ -48,36 +77,10 @@ def show(on_internet_checkbox_change=None):
                 message_placeholder.markdown(full_response + "▌")
             message_placeholder.markdown(full_response)
             
-            #  evidence = rag_generator.cal_evidence(full_response)
-            #  with st.expander("More information"):
-            #      more_info(evidence)
+            evidence = rag_generator.cal_evidence(full_response)
+            with st.expander("More information"):
+                more_info(evidence)
             
         # Add assistant response to chat history
-        st.session_state.messages.append({"role": "assistant", "content": full_response, })
-        #"evidence": evidence})
-
-    # More info function (unchanged)
-    def more_info(evidence: dict):
-        if not evidence['context_list']:
-            st.markdown("**No evidence found**")
-            return
-        tabs = st.tabs([str(i + 1) for i in range(len(evidence["context_list"]))])
-        for i, ctx in enumerate(evidence["context_list"]):
-            with tabs[i]:
-                link = f"https://www.youtube.com/watch?v={ctx['metadata']['video_id']}&t={ctx['metadata']['start']}s"
-                st.markdown(f"**Context** ([source]({link})): {ctx['context']}\n")
-                col1, col2 = st.columns([3, 3])
-                with col1:
-                    st.video(data=link, start_time=ctx['metadata']['start'], end_time=ctx['metadata']['end'])
-                f_score = ctx['f_score']
-                cr_score = ctx['cr_score']
-                st.markdown(f"**Faithfulness Score:** {f_score * 100:.2f}%")
-                st.markdown(f"**Context Relevancy Score:** {cr_score * 100:.2f}%")
-
-    # Internet resources checkbox (unchanged)
-    if on_internet_checkbox_change:
-        with st.sidebar:
-            indb = st.checkbox("Course's record", value=True)
-            internet = st.checkbox("Internet", value=False)
-            on_internet_checkbox_change(internet)
+        st.session_state.messages.append({"role": "assistant", "content": full_response, "evidence": evidence})
 
