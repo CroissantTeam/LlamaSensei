@@ -43,9 +43,9 @@ def create_course_ui():
             upload_button = st.form_submit_button(label="Upload")
             if upload_button:
                 if url:
-                    upload_course_data(st.session_state.course_name, url, erase_db)
+                    upload_course_data(st.session_state.course_name, url, st.session_state.erase_db)
                 else:
-                    st.warning("⚠️ YouTube URL cannot be empty.")
+                    st.toast("⚠️ YouTube URL cannot be empty. ⚠️")
 
 def choose_course_ui():
     """Display the UI for choosing an existing course."""
@@ -83,9 +83,9 @@ def choose_course_ui():
             upload_button = st.form_submit_button(label="Upload")
             if upload_button:
                 if url:
-                    upload_course_data(st.session_state.course_name, url, erase_db)
+                    upload_course_data(st.session_state.course_name, url, st.session_state.erase_db)
                 else:
-                    st.warning("⚠️ YouTube URL cannot be empty.")
+                    st.toast("⚠️ YouTube URL cannot be empty. ⚠️")
 
 def upload_course_data(course_name, url, erase_db=False):
     """Handle the upload process for the selected course."""
@@ -112,9 +112,9 @@ def upload_course_data(course_name, url, erase_db=False):
                 metadata={'video_id': video_id.split('.')[0]},
             )
     except Exception as e:
-        st.error(f"An error occurred while uploading: {str(e)}")
+        st.toast(f"⚠️ An error occurred while uploading: {str(e)} ⚠️")
         st.rerun()
-    st.success("Upload completed successfully!")
+    st.toast("✅ Upload completed successfully! ✅")
 
     # Clean up
     shutil.rmtree(os.path.join("data", course_name))
