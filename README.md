@@ -1,10 +1,10 @@
 # Llama Sensei: An AI-Powered Learning Assistant
 
-## Introduction
-
 <p align="center">
   <img src="./assets/llama_sensei_logo.png" width="300" height="300" />
 </p>
+
+## Introduction
 
 **Llama Sensei** is a Chatbot application designed to enhance the learning experience by providing instantaneous answers to users' questions about their lecture content on online learning platform (e.g. Youtube). It leverages Large Language Models (LLM) and Retrieval-Augmented Generation (RAG) to ensure accurate and relevant information is delivered. Additionally, it provides precise links to the reference source that RAG uses, enhancing transparency and trust in the provided answers.
 
