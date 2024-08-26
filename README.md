@@ -33,14 +33,13 @@ Chat interface  |  Add new course interface
 
 #### Chat
 
-- **Context Retrieval**: Retrieve context from either the selected course or the internet, including web search, to provide relevant answers.
+- **Context Retrieval**: Retrieve context from either the selected course or the internet, or both, to provide relevant answers.
 - **Reference Linking**: Display reference links retrieved from the knowledge base and web search results, including precise timestamps for video content (e.g., specific segments in YouTube videos).
-- **Web Search Integration**: Incorporate information from web searches to supplement course content and provide comprehensive answers.
-- **Automated Answer Grading**: Answers are automatically graded by our algorithm to assess their relevance and accuracy.
+- **Automated Answer Grading**: Answers are automatically graded by our application to assess their relevance and reliability.
 
 #### Add New Course
 
-- **Create New Course**: Easily create a new course within the application.
+- **Create New Course**: Easily create a new course within the application by providing the course's URL (**Currently we only support Youtube playlist URLs**)
 - **Add Videos**: Add new videos to an existing course, allowing for continuous updates and expansion of course content.
 
 ### Technologies Used
