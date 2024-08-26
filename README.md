@@ -144,11 +144,20 @@ To ensure the effectiveness of our RAG system, we conduct evaluations based on:
 3. **Overall System Performance**: Metrics such as F1-score, relevance, and accuracy are used to evaluate the pipeline comprehensively.
 4. **User Feedback**: Collecting user ratings to continuously improve the model.
 
-## Future works
-
 ## Contributing
 
 If you find any issues or have suggestions for improvements, please feel free to open an issue.
+
+### Future roadmap
+
+### Code Quality
+
+We maintain high code quality standards through:
+- Continuous Integration (CI)
+- Coding conventions
+- Docstrings
+- Pre-commit hooks
+- Unit testing
 
 ## Credits
 
