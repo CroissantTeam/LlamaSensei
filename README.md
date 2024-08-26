@@ -2,6 +2,8 @@
 
 ## Introduction
 
+![llama_sensei_logo](./assets/llama_sensei_logo.png)
+
 **Llama Sensei** is a Chatbot application designed to enhance the learning experience by providing instantaneous answers to users' questions about their lecture content on online learning platform (e.g. Youtube). It leverages Large Language Models (LLM) and Retrieval-Augmented Generation (RAG) to ensure accurate and relevant information is delivered. Additionally, it provides precise links to the reference source that RAG uses, enhancing transparency and trust in the provided answers.
 
 ## Table of Contents
@@ -21,7 +23,7 @@
 
 Chat interface  |  Add new course interface
 :-------------------------:|:-------------------------:
-![llama_sensei_demo](./assets/chat_ui.png) | ![llama_sensei_demo](./assets/add_course_ui.png)
+![chat_ui](./assets/chat_ui.png) | ![add_course_ui](./assets/add_course_ui.png)
 
 ### Features
 
@@ -38,7 +40,7 @@ Chat interface  |  Add new course interface
 - **Youtube lecture video crawling**: download youtube video playlist that contain lecture videos using [yt-dlp](https://github.com/yt-dlp/yt-dlp).
 - **Speech-to-Text**: transcribe lecture videos into transcripts with specific timestamp using [Deepgram API](https://deepgram.com/).
 - **Text Processing**: preprocess and handle text data using [NLTK](https://www.nltk.org/api/nltk.html).
-- **Text Embedding**: embed text data using [sentence_transformers]([https://www.nltk.org/api/nltk.html](https://huggingface.co/sentence-transformers)).
+- **Text Embedding**: embed text data using [sentence_transformers]([https://www.nltk.org/api/nltk.html](https://huggingface.co/sentence-transformers).
 - **Vector Database**: store and retrieve encoded lecture transcripts for RAG using [ChromaDB](https://docs.llamaindex.ai/en/stable/getting_started/starter_example/).
 - **Internet context search**: retrieve the external context from internet for RAG using [Duckduckgo](https://duckduckgo.com/).
 - **LLM API**: use [Groq](https://groq.com/) for fast LLM inference with various models (such as Llama, Mistral, etc.) and real-time answer streaming.
@@ -48,7 +50,7 @@ Chat interface  |  Add new course interface
 
 ### Overall architecture design
 
-![llama_sensei_demo](./assets/architecture_design.png)
+![architecture_design](./assets/architecture_design.png)
 
 ## Installation
 
@@ -96,7 +98,7 @@ To run the application locally, follow these steps:
 
 ## API Endpoints
 
-![llama_sensei_demo](./assets/api_endpoints.png)
+![api_design](./assets/api_endpoints.png)
 
 ## Project Structure
 
