@@ -106,27 +106,22 @@ The project structure is organized as follows:
 
 ```
 📦 llama-sensei
-├─ .github # For Github Actions configuration
+├─ .github/ # For Github Actions configuration
 │  └─ ...
-├─ app
-│  └─ llama_sensei
-│     ├─ backend
-│     │  ├─ add_courses
-│     │  │  ├─ document
-│     │  │  └─ vectordb
-│     │  └─ chat
-│     │     ├─ gen_prompt.py
-│     │     └─ output.py
-│     └─ frontend
-│        ├─ pages
-│        │  └─ Add_Courses_Interface.py
-│        └─ Chat_Interface.py
-├─ assets
+├─ app/
+│  └─ llama_sensei/
+│     ├─ backend/
+│     │  ├─ add_courses/
+│     │  └─ qa/
+│     └─ frontend/
+│        ├─ pages/
+│        └─ main.py
+├─ assets/
 │  └─ ...
-├─ scripts
+├─ scripts/
 │  └─ ...
-├─ tests
-│  └─ unit
+├─ tests/
+│  └─ unit/
 ├─ .env.example # example environment variables
 ├─ .pre-commit-config.yaml
 ├─ README.md
