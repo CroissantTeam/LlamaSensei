@@ -76,7 +76,7 @@ This project supports deployment using `docker compose`. To run the application 
 
 3. Start the application by running the following command::
   ```bash
-  docker-compose up -d
+  docker compose up -d
   ```
 
 4. When the service `course_management_api` is building, the yt-dlp will ask you to give authorization with this notification:
