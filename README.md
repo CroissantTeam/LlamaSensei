@@ -29,13 +29,19 @@ Chat interface  |  Add new course interface
 
 ### Features
 
-- **Speech Processing**: Uses VAD to segment speech, removing silent and non-speech parts, and Deepgram for speech-to-text conversion.
-- **Text Processing**: Utilizes NLTK for efficient text preprocessing and handling.
-- **Dynamic Query Handling**: Retrieves answers using a RAG pipeline that combines the strengths of vector databases and LLMs.
-- **Interactive User Interface**: Streamlit-based UI allowing users to add new courses and ask questions in a user-friendly manner.
-- **Real-Time Answer Streaming**: Answers are generated and displayed in real-time, enhancing user experience.
-- **Search Integration**: Allows users to retrieve context from the vector database or search the internet for additional information.
-- **Course Management**: FastAPI backend for managing course content, enabling easy addition and updating of course materials.
+**Llama Sensei** offers two main features: **Chat** and **Add New Course**.
+
+#### Chat
+
+- **Context Retrieval**: Retrieve context from either the selected course or the internet, including web search, to provide relevant answers.
+- **Reference Linking**: Display reference links retrieved from the knowledge base and web search results, including precise timestamps for video content (e.g., specific segments in YouTube videos).
+- **Web Search Integration**: Incorporate information from web searches to supplement course content and provide comprehensive answers.
+- **Automated Answer Grading**: Answers are automatically graded by our algorithm to assess their relevance and accuracy.
+
+#### Add New Course
+
+- **Create New Course**: Easily create a new course within the application.
+- **Add Videos**: Add new videos to an existing course, allowing for continuous updates and expansion of course content.
 
 ### Technologies Used
 
