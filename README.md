@@ -2,7 +2,9 @@
 
 ## Introduction
 
-![llama_sensei_logo](./assets/llama_sensei_logo.png)
+<p align="center">
+  <img src="./assets/llama_sensei_logo.png" width="300" height="300" />
+</p>
 
 **Llama Sensei** is a Chatbot application designed to enhance the learning experience by providing instantaneous answers to users' questions about their lecture content on online learning platform (e.g. Youtube). It leverages Large Language Models (LLM) and Retrieval-Augmented Generation (RAG) to ensure accurate and relevant information is delivered. Additionally, it provides precise links to the reference source that RAG uses, enhancing transparency and trust in the provided answers.
 
@@ -98,7 +100,7 @@ To run the application locally, follow these steps:
 
 ## API Endpoints
 
-![api_design](./assets/api_endpoints.png)
+![api_design](./assets/api_design.png)
 
 ## Project Structure
 
