@@ -83,7 +83,7 @@ This project supports deployment using `docker compose`. To run the application 
     [youtube+oauth2] To give yt-dlp access to your account, go to https://www.google.com/device and enter code XXX-YYY-ZZZ
     ```
     Follow the provided link and enter the code, this will give yt-dlp allowance to download youtube lecture videos.
-  
+
 5. Wait until all the services are running and go to `localhost:8081` and enjoy!
 
 6. (Optional - for demo purpose) Download the [processed course transcript (stanford cs229) here](https://drive.google.com/drive/folders/1uDL-VKjL2OJMxMTq-ptheb7c49aAhS6o?usp=sharing) and add the course to database by running the following command (please change the path to the transcript inside the python script file `scripts/create_collection.py` first):
@@ -150,7 +150,7 @@ If you find any issues or have suggestions for improvements, please feel free to
 
 - Technical:
   - Optimize the efficienty of the models and latency (which we did not technically measure)
-- More features: 
+- More features:
   - Implement better User Interface (e.g. using React)
   - Save answer history
   - Get user feedback: Like/dislike button for app evaluation
