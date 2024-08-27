@@ -50,7 +50,8 @@ Chat interface  |  Add new course interface
 - **Text Embedding**: embed text data using [sentence_transformers](https://huggingface.co/sentence-transformers).
 - **Vector Database**: store and retrieve encoded lecture transcripts for RAG using [ChromaDB](https://docs.llamaindex.ai/en/stable/getting_started/starter_example/).
 - **Internet context search**: retrieve the external context from internet for RAG using [Duckduckgo](https://duckduckgo.com/).
-- **LLM API**: use [Groq](https://groq.com/) for fast LLM inference with various models (such as Llama, Mistral, etc.) and real-time answer streaming.
+- **LLM API**: use [Groq](https://groq.com/) for fast LLM inference with various models (Llama, Mistral, etc.) and real-time answer streaming.
+- **Scoring and Evaluation**: use [Ragas](https://ragas.io/) framework to evaluate RAG pipeline and LLM answer.
 - **User Interface**: implement interactive front-end using [Streamlit](https://streamlit.io/).
 - **Backend APIs**: implement back-end APIs using [FastAPI](https://fastapi.tiangolo.com/).
 - **Containerization**: use [Docker](https://www.docker.com/) for easy deployment.
