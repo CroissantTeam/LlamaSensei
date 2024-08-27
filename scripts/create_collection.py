@@ -4,9 +4,6 @@ import os
 from llama_sensei.backend.add_courses.vectordb.document_processor import (
     DocumentProcessor,
 )
-from llama_sensei.backend.add_courses.vectordb.vector_db_operations import (
-    VectorDBOperations,
-)
 
 course_name = "cs224n_stanford"
 transcript_folder = f"/shared/final/{course_name}/transcript/"

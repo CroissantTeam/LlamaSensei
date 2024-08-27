@@ -1,5 +1,6 @@
 import streamlit as st
 
+
 def show():
     st.write("# About Us")
     st.write("Llama Sensei is an AI-powered learning assistant...")

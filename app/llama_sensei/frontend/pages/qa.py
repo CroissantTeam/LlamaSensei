@@ -2,18 +2,19 @@ import chromadb
 import streamlit as st
 from llama_sensei.backend.qa.generate_answer import GenerateRAGAnswer
 
+
 def get_courses():
     client = chromadb.PersistentClient(path="data/chroma_db")
     return [x.name for x in client.list_collections()]
+
 
 def show(on_internet_checkbox_change=None):
     # Sidebar for course selection
     st.sidebar.header("Course Selection")
     course_name = st.sidebar.selectbox(
-        label="Choose the course you want to ask",
-        options=get_courses()
+        label="Choose the course you want to ask", options=get_courses()
     )
-    
+
     # Initialize chat history and RAG generator
     if "messages" not in st.session_state:
         st.session_state.messages = []
@@ -43,7 +44,11 @@ def show(on_internet_checkbox_change=None):
                 if 'video_id' in ctx['metadata']:
                     col1, col2 = st.columns([3, 3])
                     with col1:
-                        st.video(data=link, start_time=ctx['metadata']['start'], end_time=ctx['metadata']['end'])
+                        st.video(
+                            data=link,
+                            start_time=ctx['metadata']['start'],
+                            end_time=ctx['metadata']['end'],
+                        )
                 f_score = ctx['f_score']
                 cr_score = ctx['cr_score']
                 st.markdown(f"**Faithfulness Score:** {f_score * 100:.2f}%")
@@ -69,18 +74,19 @@ def show(on_internet_checkbox_change=None):
         with st.chat_message("assistant"):
             rag_generator = st.session_state.rag_generator
             rag_generator.prepare_context(indb, internet, query=prompt)
-            
+
             message_placeholder = st.empty()
             full_response = ""
             for response in rag_generator.generate_llm_answer():
                 full_response += response
                 message_placeholder.markdown(full_response + "▌")
             message_placeholder.markdown(full_response)
-            
+
             evidence = rag_generator.cal_evidence(full_response)
             with st.expander("More information"):
                 more_info(evidence)
-            
-        # Add assistant response to chat history
-        st.session_state.messages.append({"role": "assistant", "content": full_response, "evidence": evidence})
 
+        # Add assistant response to chat history
+        st.session_state.messages.append(
+            {"role": "assistant", "content": full_response, "evidence": evidence}
+        )
