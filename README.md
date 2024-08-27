@@ -65,7 +65,7 @@ This project supports deployment using `docker compose`. To run the application 
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-repo/llama-sensei.git
+   git clone https://github.com/Croissant-Team-Cinnamon-Bootcamp-2024/FinalProject.git llama-sensei
    cd llama-sensei
    ```
 
