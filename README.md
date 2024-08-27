@@ -49,7 +49,8 @@
 - **Text Embedding**: embed text data using [sentence_transformers](https://huggingface.co/sentence-transformers).
 - **Vector Database**: store and retrieve encoded lecture transcripts for RAG using [ChromaDB](https://docs.llamaindex.ai/en/stable/getting_started/starter_example/).
 - **Internet context search**: retrieve the external context from internet for RAG using [Duckduckgo](https://duckduckgo.com/).
-- **LLM API**: use [Groq](https://groq.com/) for fast LLM inference with various models (such as Llama, Mistral, etc.) and real-time answer streaming.
+- **LLM API**: use [Groq](https://groq.com/) for fast LLM inference with various models (Llama, Mistral, etc.) and real-time answer streaming.
+- **Scoring and Evaluation**: use [Ragas](https://ragas.io/) framework to evaluate RAG pipeline and LLM answer.
 - **User Interface**: implement interactive front-end using [Streamlit](https://streamlit.io/).
 - **Backend APIs**: implement back-end APIs using [FastAPI](https://fastapi.tiangolo.com/).
 - **Containerization**: use [Docker](https://www.docker.com/) for easy deployment.
@@ -64,14 +65,13 @@ This project supports deployment using `docker compose`. To run the application 
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-repo/llama-sensei.git
+   git clone https://github.com/Croissant-Team-Cinnamon-Bootcamp-2024/FinalProject.git llama-sensei
    cd llama-sensei
    ```
 
 2. Get the API keys and fill the environment variables in `.env.example` file and **rename the file to `.env`**:
    - DG_API_KEY: get from https://deepgram.com/
    - GROQ_API_KEY: get from https://groq.com/
-
 
 3. Start the application by running the following command::
     ```bash
@@ -86,7 +86,7 @@ This project supports deployment using `docker compose`. To run the application 
   
 5. Wait until all the services are running and go to `localhost:8081` and enjoy!
 
-6. (Optional - for demo purpose) Download the [processed course transcript (stanford cs229) here](https://drive.google.com/drive/folders/1uDL-VKjL2OJMxMTq-ptheb7c49aAhS6o?usp=sharing) and add the course to database by running (remember to change the path to the transcript inside the python script file first):
+6. (Optional - for demo purpose) Download the [processed course transcript (stanford cs229) here](https://drive.google.com/drive/folders/1uDL-VKjL2OJMxMTq-ptheb7c49aAhS6o?usp=sharing) and add the course to database by running the following command (please change the path to the transcript inside the python script file `scripts/create_collection.py` first):
     ```bash
     python scripts/create_collection.py
     ```
