@@ -166,4 +166,4 @@ We maintain high code quality standards through:
 
 ## Credits
 
-This project was developed by @Croissant team.
+This project was developed by [@Croissant](https://github.com/Croissant-Team-Cinnamon-Bootcamp-2024) team.
