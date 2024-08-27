@@ -15,7 +15,6 @@
 - [Installation](#installation)
 - [Usage](#usage)
 - [Project Structure](#project-structure)
-- [Evaluation](#evaluation)
 - [Contributing](#contributing)
 - [Credits](#credits)
 
@@ -23,9 +22,9 @@
 
 ### User interface
 
-Chat interface  |  Add new course interface
+
+![chat_ui](./assets/chat_ui.png) | ![add_course_ui](./assets/chat_ui_2.png)
 :-------------------------:|:-------------------------:
-![chat_ui](./assets/chat_ui.png) | ![add_course_ui](./assets/add_course_ui.png)
 
 ### Features
 
@@ -75,22 +74,22 @@ This project supports deployment using `docker compose`. To run the application 
 
 
 3. Start the application by running the following command::
-  ```bash
-  docker compose up -d
-  ```
+    ```bash
+    docker compose up -d
+    ```
 
 4. When the service `course_management_api` is building, the yt-dlp will ask you to give authorization with this notification:
-  ```
-  [youtube+oauth2] To give yt-dlp access to your account, go to https://www.google.com/device and enter code XXX-YYY-ZZZ
-  ```
-  Follow the provided link and enter the code, this will give yt-dlp allowance to download youtube lecture videos.
+    ```
+    [youtube+oauth2] To give yt-dlp access to your account, go to https://www.google.com/device and enter code XXX-YYY-ZZZ
+    ```
+    Follow the provided link and enter the code, this will give yt-dlp allowance to download youtube lecture videos.
   
 5. Wait until all the services are running and go to `localhost:8081` and enjoy!
 
 6. (Optional - for demo purpose) Download the [processed course transcript (stanford cs229) here](https://drive.google.com/drive/folders/1uDL-VKjL2OJMxMTq-ptheb7c49aAhS6o?usp=sharing) and add the course to database by running (remember to change the path to the transcript inside the python script file first):
-  ```bash
-  python scripts/create_collection.py
-  ```
+    ```bash
+    python scripts/create_collection.py
+    ```
 
 ## Usage
 
@@ -143,20 +142,18 @@ The project structure is organized as follows:
 └─ setup.py
 ```
 
-## Evaluation
-
-To ensure the effectiveness of our RAG system, we conduct evaluations based on:
-
-1. **Retriever Performance**: Using datasets like Qasper for benchmarking.
-2. **Generator Performance**: Testing with synthetic datasets and different LLMs.
-3. **Overall System Performance**: Metrics such as F1-score, relevance, and accuracy are used to evaluate the pipeline comprehensively.
-4. **User Feedback**: Collecting user ratings to continuously improve the model.
-
 ## Contributing
 
 If you find any issues or have suggestions for improvements, please feel free to open an issue.
 
 ### Future roadmap
+
+- Technical:
+  - Optimize the efficienty of the models and latency (which we did not technically measure)
+- More features: 
+  - Implement better User Interface (e.g. using React)
+  - Save answer history
+  - Get user feedback: Like/dislike button for app evaluation
 
 ### Code Quality
 
