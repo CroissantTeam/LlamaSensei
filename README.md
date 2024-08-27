@@ -73,7 +73,6 @@ This project supports deployment using `docker compose`. To run the application 
    - DG_API_KEY: get from https://deepgram.com/
    - GROQ_API_KEY: get from https://groq.com/
 
-
 3. Start the application by running the following command::
   ```bash
   docker compose up -d
@@ -83,6 +82,7 @@ This project supports deployment using `docker compose`. To run the application 
   ```
   [youtube+oauth2] To give yt-dlp access to your account, go to https://www.google.com/device and enter code XXX-YYY-ZZZ
   ```
+
   Follow the provided link and enter the code, this will give yt-dlp allowance to download youtube lecture videos.
   
 5. Wait until all the services are running and go to `localhost:8081` and enjoy!
